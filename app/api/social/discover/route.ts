@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchWebsiteHtml } from '@/lib/audit'
-import { extractSocialLinks, discoverBrandAssets, discoverSocialsFromGoogle, discoverVerifiedSocialsFromSearch, type BrandAsset, type DiscoveredSocials } from '@/lib/social'
+import { extractSocialLinks, discoverBrandAssets, discoverVerifiedSocialsFromSearch, type BrandAsset, type DiscoveredSocials } from '@/lib/social'
 import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
 
 export const runtime = 'nodejs'
@@ -19,6 +19,11 @@ export async function GET(req: NextRequest) {
   let websiteUrl = ''
   let assets: BrandAsset[] = []
   let htmlAvailable = false
+  // For a blank GMB website, run social discovery alongside the potential
+  // website lookup. Waiting for the website before starting three provider
+  // searches is what previously exceeded this route's 30-second budget.
+  let verifiedSocialPromise: Promise<{ socials: DiscoveredSocials; assets: BrandAsset[] }> | null =
+    !url && name ? discoverVerifiedSocialsFromSearch(name, address, [...CORE_PLATFORMS]) : null
   try {
     if (url) {
       const fetched = await fetchWebsiteHtml(url)
@@ -53,35 +58,21 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Search every missing core platform even when no website was found. A
-  // chain-level official profile is verified independently of website discovery.
+  // If a GMB website was supplied, start the social lookup after inspecting it.
+  // In the blank-website case it has already been running in parallel above.
   const missingCore = CORE_PLATFORMS.filter((p) => !socials[p])
-  if (name && missingCore.length) {
+  if (!verifiedSocialPromise && name && missingCore.length) {
+    verifiedSocialPromise = discoverVerifiedSocialsFromSearch(name, address, [...missingCore])
+  }
+  if (verifiedSocialPromise) {
     try {
-      const verified = await discoverVerifiedSocialsFromSearch(name, address, [...missingCore])
+      const verified = await verifiedSocialPromise
       for (const [platform, link] of Object.entries(verified.socials)) {
         if (link && !socials[platform as keyof DiscoveredSocials]) socials[platform as keyof DiscoveredSocials] = link
       }
       assets.push(...verified.assets)
     } catch (error) {
       debugError('social.discover', 'Verified platform search failed', error, { name })
-    }
-  }
-
-  // Broad discovery remains a confirmation-only fallback. It never overrides
-  // website-linked or platform-verified profiles above.
-  const remainingCore = CORE_PLATFORMS.filter((p) => !socials[p])
-  if (name && remainingCore.length) {
-    try {
-      const fromGoogle = await discoverSocialsFromGoogle(name, address)
-      for (const [platform, link] of Object.entries(fromGoogle)) {
-        if (link && !socials[platform as keyof DiscoveredSocials]) {
-          socials[platform as keyof DiscoveredSocials] = link
-          assets.push({ kind: 'social', platform: platform as any, url: link, source: 'search', verification: 'candidate_needs_confirmation', confidence: 'limited', evidence: ['Found in brand search; owner confirmation required'] })
-        }
-      }
-    } catch (error) {
-      debugError('social.discover', 'Google fallback failed', error, { name })
     }
   }
 

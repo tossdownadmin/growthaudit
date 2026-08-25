@@ -28,7 +28,7 @@ flowchart LR
 - trailing slash: disabled
 - main audit timeout declaration: 120 seconds
 - competitor route timeout declaration: 120 seconds
-- social discovery/check declarations: 30/60 seconds
+- social discovery: 30 seconds; independent website and social discovery calls run concurrently within that budget
 - competitor policy explicitly included in output-file tracing
 
 > [!important]

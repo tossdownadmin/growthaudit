@@ -170,17 +170,6 @@ export function extractSocialLinks(html: string, baseUrl: string): DiscoveredSoc
   return found
 }
 
-// Recursively collect every http(s) URL string found anywhere in a JSON blob.
-function collectUrls(node: any, out: string[], depth = 0): void {
-  if (node == null || depth > 8) return
-  if (typeof node === 'string') {
-    if (/^https?:\/\//i.test(node)) out.push(node)
-    return
-  }
-  if (Array.isArray(node)) { node.forEach((n) => collectUrls(n, out, depth + 1)); return }
-  if (typeof node === 'object') for (const k of Object.keys(node)) collectUrls(node[k], out, depth + 1)
-}
-
 const NON_BRAND_WEBSITE_HOSTS = [
   'google.com', 'googleusercontent.com', 'maps.google.com', 'facebook.com', 'instagram.com', 'tiktok.com', 'x.com', 'twitter.com',
   'doordash.com', 'ubereats.com', 'grubhub.com', 'skiptheddishes.com', 'deliveroo.co.uk', 'foodpanda.com',
@@ -234,7 +223,7 @@ type SearchResult = { url?: string; title?: string; snippet?: string; descriptio
  * the API key is never exposed to the browser and callers receive only the
  * small, provider-neutral result shape needed for brand verification.
  */
-async function searchGoogle(query: string, timeoutMs = 12_000): Promise<SearchResult[]> {
+async function searchGoogle(query: string, timeoutMs = 8_000): Promise<SearchResult[]> {
   const apiKey = process.env.SERPAPI_API_KEY
   if (!apiKey || !query.trim()) {
     if (query.trim()) debugLog('social.serpapi', 'Search skipped because SERPAPI_API_KEY is not configured')
@@ -275,7 +264,7 @@ export async function discoverBrandAssets(name: string, address: string): Promis
 
   try {
     const keyword = `${name} ${address}`.replace(/\s+/g, ' ').trim()
-    const items = await searchGoogle(keyword, 25_000)
+    const items = await searchGoogle(keyword, 8_000)
 
     for (const item of items) {
       const url = candidateWebsiteUrl(item?.url)
@@ -371,33 +360,6 @@ export async function discoverVerifiedSocialsFromSearch(
   }
   debugLog('social.brand-search', 'Verified platform search completed', { name, locality: socialSearchLocality(address), requestedPlatforms: platforms, foundPlatforms: Object.keys(empty.socials) })
   return empty
-}
-
-/**
- * Discover a restaurant's social profiles from Google results when
- * the website has none. Best-effort: any failure returns {} so the caller can
- * carry on. Results are only DISCOVERY suggestions — the user confirms/edits them.
- */
-export async function discoverSocialsFromGoogle(name: string, locationHint?: string): Promise<DiscoveredSocials> {
-  const found: DiscoveredSocials = {}
-  if (!process.env.SERPAPI_API_KEY || !name?.trim()) return found
-
-  const keyword = `${name} ${locationHint ?? ''} instagram facebook tiktok`.replace(/\s+/g, ' ').trim()
-  try {
-    const items = await searchGoogle(keyword, 25_000)
-    const urls: string[] = []
-    collectUrls(items, urls)
-    for (const raw of urls) {
-      const match = classifyUrl(raw)
-      if (match && !found[match.platform]) found[match.platform] = match.url
-    }
-    debugLog('social.google-discover', 'Google social discovery complete', { keyword, platforms: Object.keys(found) })
-    return found
-  } catch (error) {
-    if (!(error instanceof Error && error.name === 'AbortError')) debugError('social.google-discover', 'Google social discovery threw', error)
-    else debugError('social.google-discover', 'Google social discovery timed out', error)
-    return found
-  }
 }
 
 export function extractHandle(platform: SocialPlatform, url: string): string | null {
