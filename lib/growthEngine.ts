@@ -367,7 +367,7 @@ export function scoreGrowthEngine(args: {
 
   const reputation = normSection({
     key: 'reputation',
-    label: 'Reputation + Local Presence',
+    label: 'Reputation & Reviews',
     question: 'When diners compare options nearby, are you winning trust?',
     weight: 25,
     signals: [
@@ -431,7 +431,7 @@ export function scoreGrowthEngine(args: {
   const retentionMap = retentionSignalsScoreMap(website)
   const retention = normSection({
     key: 'retention',
-    label: 'Customer Retention',
+    label: 'Getting Customers Back',
     question: 'Are you giving first-time customers a reason and a path to come back?',
     weight: 20,
     signals: [
@@ -502,7 +502,7 @@ export function scoreGrowthEngine(args: {
 
   const engagement = normSection({
     key: 'engagement',
-    label: 'Customer Engagement',
+    label: 'Staying Connected',
     question: 'Are you consistently staying in touch and closing the feedback loop?',
     weight: 15,
     // Engagement combines public social activity + owner review-response
@@ -531,7 +531,7 @@ export function scoreGrowthEngine(args: {
 
   const measurement = normSection({
     key: 'measurement',
-    label: 'Measurement + Growth',
+    label: 'Knowing What Works',
     question: 'Do you have the public tracking foundation to know what is working and scale it?',
     weight: 15,
     signals: [

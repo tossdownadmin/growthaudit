@@ -420,10 +420,10 @@ function GrowthEngineMap({audit}:{audit:any}){
   const sections=audit.result?.sectionByKey??{}
   const rows=[
     {label:'Website + Ordering',sub:'Turn high-intent traffic into a direct action.',key:'websiteOrdering'},
-    {label:'Reputation + Local Presence',sub:'Win trust when diners compare nearby options.',key:'reputation'},
-    {label:'CRM + Repeat Customer Readiness',sub:'Create visible paths to recognize and reach customers again.',key:'retention'},
-    {label:'Engagement',sub:'Stay active across social and customer feedback.',key:'engagement'},
-    {label:'Analytics + Measurement',sub:'Know what is working before you scale it.',key:'measurement'},
+    {label:'Reputation & Reviews',sub:'Win trust when diners compare nearby options.',key:'reputation'},
+    {label:'Getting Customers Back',sub:'Create visible paths to recognize and reach customers again.',key:'retention'},
+    {label:'Staying Connected',sub:'Stay active across social and customer feedback.',key:'engagement'},
+    {label:'Knowing What Works',sub:'Know what is working before you scale it.',key:'measurement'},
   ]
   return <section className="mb-10">
     <div className="mb-5">
