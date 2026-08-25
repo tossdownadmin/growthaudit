@@ -1,0 +1,40 @@
+Deploy and test this project as supplied.
+
+Do NOT rebuild the product from scratch.
+Do NOT replace the working Outscraper, SocialCrawl, Browserless, PageSpeed, Google Places, or OpenAI integrations.
+Do NOT modify Firebase/GHL/CRM logic during this test.
+
+This build is testing a new restaurant-owner Growth Engine audit.
+
+Before deployment:
+1. inspect GROWTH_AUDIT_V1.md
+2. run pnpm install
+3. run pnpm typecheck
+4. run pnpm build
+5. fix only actual build/runtime issues
+
+Smoke test 3 restaurants.
+
+For each test verify:
+- Growth Engine Score returns
+- five pillar scores return
+- ordering is classified as owned/branded_direct/mixed/marketplace/unclear/none
+- local benchmark returns plausible nearby alternatives
+- Google reviews still work
+- owner response metrics still work
+- SocialCrawl still works
+- PageSpeed still works
+- technical metadata still works
+- AI summary/top 3 priorities are grounded in deterministic evidence
+- report renders on mobile and desktop
+
+Do not hardcode test restaurants.
+
+At the end report only:
+- typecheck pass/fail
+- build pass/fail
+- files changed to fix build issues
+- 3 test Growth Engine Scores
+- ordering classification for each
+- benchmark candidate names for each
+- any provider failures

@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+
+@keyframes audit-progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(500%); } }
+@theme inline { --font-sans: var(--font-geist); --font-mono: var(--font-mono); --color-background: #faf9f7; --color-foreground: #191919; --color-card: #ffffff; --color-card-foreground: #191919; --color-muted: #f1efec; --color-muted-foreground: #6e6a67; --color-border: #e5e1dc; --color-primary: #ed1f5b; --color-primary-foreground: #ffffff; --color-success: #246b4a; --color-warning: #ad6b00; --color-danger: #b42318; }
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin:0; background:#faf9f7; color:#191919; font-family:var(--font-geist),sans-serif; }
+button,input { font:inherit; }
+::selection { background:#ed1f5b; color:white; }
