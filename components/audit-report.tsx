@@ -81,7 +81,7 @@ function buildChecklist(audit:any):Array<{title:string;items:ChecklistItem[]}>{
   const orderingState:ChecklistState =
     website.ordering?.status==='owned'||website.ordering?.status==='branded_direct'
       ? 'pass'
-      : website.ordering?.status==='mixed'||website.ordering?.status==='unclear'
+      : website.ordering?.status==='mixed'||website.ordering?.status==='location_required'||website.ordering?.status==='unclear'
         ? 'attention'
         : website.ordering?.status==='marketplace'||website.ordering?.status==='none'
           ? 'fail'
@@ -257,6 +257,7 @@ function orderingStatusLabel(status:string|undefined){
   if(status==='branded_direct')return {label:'Branded direct ordering',color:'#0f9d58'}
   if(status==='mixed')return {label:'Mixed ordering',color:'#f4a400'}
   if(status==='marketplace')return {label:'Marketplace handoff',color:pink}
+  if(status==='location_required')return {label:'Ordering available — location selection required',color:'#f4a400'}
   if(status==='unclear')return {label:'Ordering ownership unclear',color:'#f4a400'}
   return {label:'No online ordering detected',color:pink}
 }
@@ -291,6 +292,7 @@ function WebsiteOrderingGrowth({audit}:{audit:any}){
           <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{color:status.color,background:`color-mix(in srgb, ${status.color} 12%, transparent)`}}>{section?.score??'—'}/100 pillar</span>
         </div>
         <p className="mt-4 text-base leading-7 text-muted-foreground">{ordering?.summary??'Ordering could not be measured from the public website.'}</p>
+        {ordering?.status==='location_required'&&<p className="mt-3 text-sm leading-6 text-muted-foreground">Checkout, customer capture and ordering ownership were not scored because the site requires a location choice before those steps become publicly visible.</p>}
         {ordering?.primaryUrl&&<a href={ordering.primaryUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-sm font-medium hover:underline" style={{color:pink}}>Open detected order path <ExternalLink className="h-3.5 w-3.5"/></a>}
         {ordering?.links?.length>1&&<p className="mt-3 text-xs text-muted-foreground">{ordering.links.length} ordering-related links detected on the site.</p>}
       </div>
@@ -306,10 +308,10 @@ function WebsiteOrderingGrowth({audit}:{audit:any}){
 
 function CompetitorBenchmarkPanel({audit}:{audit:any}){
   const b=audit.benchmark
-  // Tiered rendering. The section should NEVER silently vanish:
+  // Tiered rendering:
   //   • strong V3 set        → "Likely competitors" (full substitution framing)
   //   • modest V3 / fallback → "Local reference points" (directional context)
-  //   • engine unavailable   → one honest line, so the owner knows why.
+  //   • no valid set         → hide the section rather than show a placeholder.
   if(!b) return null
 
   const hasCandidates=Array.isArray(b.candidates)&&b.candidates.length>0
@@ -318,18 +320,7 @@ function CompetitorBenchmarkPanel({audit}:{audit:any}){
   // it to appear — it just changes how confidently we frame it.
   const strong=fromEngine&&b.presentationEligible===true&&hasCandidates
 
-  // Engine unavailable or returned nothing usable → honest note, not an empty gap.
-  if(!hasCandidates){
-    return <section className="mb-10">
-      <div className="mb-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{color:pink}}>How you stack up locally</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">Local competitive benchmark</h2>
-      </div>
-      <div className="rounded-3xl border border-border bg-card p-6 text-sm leading-6 text-muted-foreground">
-        The competitive benchmark for this restaurant is still being generated. Your report is complete without it — the local substitution set will appear here once the competitor model returns a confident match.
-      </div>
-    </section>
-  }
+  if(!hasCandidates)return null
 
   const targetRating=audit.reviews?.googleRating??audit.restaurant?.rating
   const targetReviews=audit.reviews?.googleReviewCount??audit.restaurant?.reviewCount

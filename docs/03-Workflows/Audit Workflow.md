@@ -67,6 +67,10 @@ One `submissionId` is generated in the browser. A first best-effort lead request
 
 The server fetches up to 1.5 MB of HTML, records reachability and response evidence, then extracts metadata, headings, schema, ordering links, customer paths, social links, tracking technologies, resource counts, opening-hours consistency, and other technical signals. Browserless is an optional fallback.
 
+### Location-gated ordering flows
+
+Some restaurant ordering sites open with a delivery/pickup mode and city, region, or branch selector. This is evidence that ordering exists, but the public scanner cannot responsibly infer checkout ownership, customer capture, or the full conversion path without choosing a location. Classify this as `location_required`, describe it as **ordering available — location selection required**, and exclude it from both positive and negative ordering scores. Never label it “No online ordering detected.” Browserless is an optional fallback.
+
 ### 5. Concurrent evidence phases
 
 - PageSpeed: mobile and desktop Lighthouse/API evidence

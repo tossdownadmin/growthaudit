@@ -16,7 +16,7 @@ Canonical Growth Engine scorer.
 - `statusFor` keeps confidence separate from performance; a high score needs sufficient coverage to render as good.
 - `ratingScore` maps roughly 3.5 to 0 and 4.8+ to 100.
 - competitor reputation functions score target rating and review-volume position against local medians.
-- `orderingScore` gives owned ordering the strongest value, followed by branded direct, mixed, unclear, marketplace, and none.
+- `orderingScore` gives owned ordering the strongest value, followed by branded direct, mixed, unclear, marketplace, and none. A `location_required` ordering flow is excluded from scoring because public evidence confirms ordering exists but cannot reveal checkout ownership or customer capture until a location is selected.
 - website/customer-path helpers score Google website agreement, search readiness, measurement tags, conversion paths, and retention signals.
 - `scoreGrowthEngine` publishes five sections, overall weighted score, coverage, provisional state, ordering, and paid-media readiness.
 - `fallbackGrowthInterpretation` produces safe owner-facing text when AI is unavailable.

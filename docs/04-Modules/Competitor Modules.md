@@ -75,6 +75,8 @@ Adapts competitor output for the growth report.
 4. calculates median rating, median review count, and ordering prevalence
 5. falls back to a lighter direct Google Places benchmark if V3 is unavailable; it is presented as **local reference points**, never as validated direct competitors. For focused concepts, this fallback requires a matching product/category cue before inclusion.
 
+If no candidates survive the quality and confidence gates, the owner-facing report hides the benchmark panel entirely. It must not show a “still being generated” or other placeholder; the audit remains complete without speculative competitive context.
+
 ## `lib/competitorQuality.ts`
 
 Compact deterministic concept-quality helper that compares target and competitor name/category/description tokens. It produces a score, overlap evidence, and a reason. It is a supplemental utility rather than the final V3 classifier.

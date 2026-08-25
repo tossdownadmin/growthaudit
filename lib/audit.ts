@@ -17,7 +17,7 @@ export type WebsiteInspection = {
   seo: number | null
   directPaths: string[]
   ordering?: {
-    status: 'owned' | 'branded_direct' | 'marketplace' | 'mixed' | 'unclear' | 'none'
+    status: 'owned' | 'branded_direct' | 'marketplace' | 'mixed' | 'location_required' | 'unclear' | 'none'
     summary: string
     primaryUrl: string | null
     provider: string | null
@@ -585,6 +585,13 @@ export function inspectHtml(html: string, url: string): WebsiteInspection {
     if (pattern.test(searchable)) directPaths.push(name)
   }
 
+  // A number of branded restaurant ordering systems deliberately block the
+  // catalogue and checkout until a city/region/branch is selected. That is
+  // proof that an order flow exists, not proof that there is no ordering.
+  const hasLocationGatedOrdering =
+    /\b(select|choose) (?:your )?(?:city|region|location|branch)\b|\bplease select (?:a )?(?:city|region|location|branch)\b/i.test(searchable) &&
+    /\b(order type|delivery|pick[- ]?up|car[- ]?hop)\b/i.test(searchable)
+
   // Ordering is not just yes/no. For a restaurant-growth audit we distinguish
   // owned/branded ordering from a handoff to a delivery marketplace.
   const normalizeHost = (raw: string) => raw.replace(/^www\./i, '').toLowerCase()
@@ -704,6 +711,7 @@ export function inspectHtml(html: string, url: string): WebsiteInspection {
   else if (hasOwnedOrdering) orderingStatus = 'owned'
   else if (hasBrandedOrdering) orderingStatus = 'branded_direct'
   else if (hasMarketplaceOrdering) orderingStatus = 'marketplace'
+  else if (hasLocationGatedOrdering) orderingStatus = 'location_required'
   else if (hasUnclearOrdering || directPaths.includes('direct ordering')) orderingStatus = 'unclear'
 
   const marketplaceProviders = [...new Set(
@@ -735,6 +743,8 @@ export function inspectHtml(html: string, url: string): WebsiteInspection {
           ? `The visible ordering path sends customers to ${marketplaceProviders.join(', ') || 'a third-party marketplace'}.`
           : orderingStatus === 'mixed'
             ? 'Both direct/branded ordering and third-party marketplace ordering are visible.'
+            : orderingStatus === 'location_required'
+              ? 'Online ordering is available, but a city or branch must be selected before the order path can be inspected.'
             : orderingStatus === 'unclear'
               ? 'Online ordering appears to exist, but ownership of the ordering relationship could not be verified.'
               : 'No clear online ordering path was detected on the website.'
