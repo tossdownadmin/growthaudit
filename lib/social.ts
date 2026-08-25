@@ -269,7 +269,12 @@ export async function discoverBrandAssets(name: string, address: string): Promis
 
   try {
     const keyword = `${name} ${address}`.replace(/\s+/g, ' ').trim()
-    const items = await searchGoogle(keyword, 8_000)
+    const [localResults, brandResults] = await Promise.all([
+      searchGoogle(keyword, 8_000),
+      searchGoogle(`${name} official website`, 8_000),
+    ])
+    const items = [...localResults, ...brandResults]
+    let bestUnverified: BrandAssetDiscovery | null = null
 
     for (const item of items) {
       const url = candidateWebsiteUrl(item?.url)
@@ -309,9 +314,14 @@ export async function discoverBrandAssets(name: string, address: string): Promis
           assets.push({ kind: 'social', platform, url: socialUrl, source: 'website', verification: 'verified_brand_asset', confidence: 'high', evidence: ['Linked from the verified official website'] })
         }
       }
-      debugLog('social.brand-discover', 'Brand asset discovery completed', { name, verified, website: website.url, platforms: Object.keys(socials) })
-      return { website, socials, assets }
+      const discovery = { website, socials, assets }
+      if (verified) {
+        debugLog('social.brand-discover', 'Brand asset discovery completed', { name, verified, website: website.url, platforms: Object.keys(socials) })
+        return discovery
+      }
+      if (!bestUnverified) bestUnverified = discovery
     }
+    if (bestUnverified) return bestUnverified
   } catch (error) {
     debugError('social.brand-discover', 'Brand asset discovery failed', error, { name })
   }
@@ -336,8 +346,10 @@ export async function discoverVerifiedSocialsFromSearch(
       const hostHint: Record<SocialPlatform, string> = {
         instagram: 'instagram.com', facebook: 'facebook.com', tiktok: 'tiktok.com', youtube: 'youtube.com', twitter: 'x.com OR twitter.com', threads: 'threads.net', linkedin: 'linkedin.com', pinterest: 'pinterest.com', snapchat: 'snapchat.com', whatsapp: 'wa.me',
       }
-      const keyword = `site:${hostHint[platform]} \"${name}\" ${socialSearchLocality(address)}`.replace(/\s+/g, ' ').trim()
-      const items = await searchGoogle(keyword)
+      const localQuery = `site:${hostHint[platform]} \"${name}\" ${socialSearchLocality(address)}`.replace(/\s+/g, ' ').trim()
+      const brandQuery = `site:${hostHint[platform]} \"${name}\"`.replace(/\s+/g, ' ').trim()
+      const [localResults, brandResults] = await Promise.all([searchGoogle(localQuery), searchGoogle(brandQuery)])
+      const items = [...localResults, ...brandResults]
       for (const item of items) {
         const match = classifyUrl(String(item?.url || ''))
         if (!match || match.platform !== platform) continue

@@ -299,6 +299,23 @@ function candidateFit(candidate: BenchmarkCandidate, input: any, textSearch: boo
   return Math.round(clamp(score))
 }
 
+function passesFocusedConceptGate(candidate: BenchmarkCandidate, input: any) {
+  const target = String(input?.primaryType || '').toLowerCase()
+  const cues: Record<string, RegExp> = {
+    hamburger_restaurant: /burger|hamburger/i,
+    pizza_restaurant: /pizza/i,
+    sushi_restaurant: /sushi/i,
+    steak_house: /steak/i,
+    coffee_shop: /coffee|cafe/i,
+    ice_cream_shop: /ice.?cream|gelato/i,
+    shawarma_restaurant: /shawarma|doner|donair/i,
+  }
+  const cue = cues[target]
+  if (!cue) return true
+  const typeText = [candidate.primaryType, ...candidate.types].join(' ').replace(/_/g, ' ')
+  return cue.test(`${candidate.name} ${typeText}`)
+}
+
 function mergeCandidate(map: Map<string, BenchmarkCandidate>, row: BenchmarkCandidate | null) {
   if (!row) return
   const existing = map.get(row.placeId)
@@ -435,6 +452,7 @@ async function buildLightweightCompetitorBenchmark(input: any, website: any): Pr
     }
 
     const ordered = [...candidates.values()]
+      .filter((candidate) => passesFocusedConceptGate(candidate, input))
       .map((candidate) => {
         const textSearch = candidate.discovery.includes('targeted_search')
         candidate.fitScore = candidateFit(candidate, input, textSearch)

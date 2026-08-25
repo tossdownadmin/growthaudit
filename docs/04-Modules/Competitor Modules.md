@@ -73,7 +73,7 @@ Adapts competitor output for the growth report.
 2. normalizes candidate fields and threat/confidence signals
 3. shallow-checks ordering on selected competitor websites
 4. calculates median rating, median review count, and ordering prevalence
-5. falls back to a lighter direct Google Places benchmark if V3 is unavailable; it is presented as **local reference points**, never as validated direct competitors
+5. falls back to a lighter direct Google Places benchmark if V3 is unavailable; it is presented as **local reference points**, never as validated direct competitors. For focused concepts, this fallback requires a matching product/category cue before inclusion.
 
 ## `lib/competitorQuality.ts`
 

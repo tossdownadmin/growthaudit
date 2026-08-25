@@ -472,7 +472,6 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
       <div id="engine"><GrowthPillars result={r}/><GrowthLeaks interpretation={i}/><WebsiteOrderingGrowth audit={audit}/></div>
       <div id="market"><CompetitorBenchmarkPanel audit={audit}/></div>
       <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><SocialActivity social={audit.social}/></div>
-      <PaidMediaReadiness result={r} interpretation={i}/>
       <GrowthEngineMap audit={audit}/>
 
       <div id="evidence" className="border-t border-border pt-12">

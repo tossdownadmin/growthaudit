@@ -53,11 +53,11 @@ sequenceDiagram
 
 ### 1. Restaurant discovery
 
-The client waits 350 ms after typing and searches when the trimmed query has at least three characters. The suggestion list is bounded and scrollable so it never obscures the selection flow on smaller screens. Selecting a suggestion requests Google fields for identity, coordinates, website, reputation, opening hours, price, category, and a small review sample.
+The client waits 350 ms after typing and searches when the trimmed query has at least three characters. The suggestion list is bounded, scrollable, and may escape its decorative hero container so it is never clipped or obscures the selection flow on smaller screens. Selecting a suggestion requests Google fields for identity, coordinates, website, reputation, opening hours, price, category, and a small review sample.
 
 ### 2. Brand-asset and social discovery
 
-The Google-linked website is fetched and parsed for recognized social URLs. When Google has no website, the application may search Google results through SerpApi using the restaurant name and locality, verify ownership with multiple signals, then extract official social links from that verified site. A multi-location brand website may be verified using brand/title evidence plus city-level evidence; an individual branch’s full street address is not required on the chain’s central website. Missing Instagram, Facebook, or TikTok profiles may be searched with platform-specific Google queries when `SERPAPI_API_KEY` is configured. Brand assets retain their discovery source and verification state so independently found assets are clearly marked as missing from GMB rather than silently treated as linked.
+The Google-linked website is fetched and parsed for recognized social URLs. When Google has no website, the application may search Google results through SerpApi using the restaurant name and locality, then use a bounded brand-only fallback query for chain-level sites/accounts that do not publish branch location text. A multi-location brand website may be verified using brand/title evidence plus city-level evidence; an individual branch’s full street address is not required on the chain’s central website. Missing Instagram, Facebook, or TikTok profiles may be searched with platform-specific Google queries when `SERPAPI_API_KEY` is configured. Brand assets retain their discovery source and verification state so independently found assets are clearly marked as missing from GMB and the website as a customer-relationship gap.
 
 ### 3. Lead lifecycle
 
@@ -72,7 +72,7 @@ The server fetches up to 1.5 MB of HTML, records reachability and response evide
 - PageSpeed: mobile and desktop Lighthouse/API evidence
 - Reviews: bounded Outscraper recent-review corpus, response data, star-rating sentiment, and deterministic product/service topic map; Google fallback remains baseline-only
 - Social: SocialCrawl activity and engagement normalization; every confirmed official profile is shown, while activity conclusions require a reliable sample
-- Competitors: internal V3 engine, then a clearly-labelled Google Places local-reference fallback when the V3 engine cannot produce an eligible set
+- Competitors: internal V3 engine, then a clearly-labelled Google Places local-reference fallback when the V3 engine cannot produce an eligible set; focused concepts apply a strict product/type gate so generic nearby restaurants do not appear as substitutes
 
 ### 6. Scoring
 
@@ -86,7 +86,7 @@ If a funded AI provider is available, it receives compact evidence and must retu
 
 ### 8. Presentation and persistence
 
-The report renders immediately. It groups findings into owner decisions—growth engine, customer conversion, local market context, customer voice, and technical evidence—rather than exposing provider-oriented sections. Persistence is attempted afterward and is non-fatal. On success, browser history is changed to the share path without reloading.
+The report renders immediately. It groups findings into owner decisions—growth engine, customer conversion, local market context, customer voice, and technical evidence—rather than exposing provider-oriented sections. Paid-media guidance is excluded from the owner report. Persistence is attempted afterward and is non-fatal. On success, browser history is changed to the share path without reloading.
 
 ## Related notes
 

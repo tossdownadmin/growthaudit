@@ -10,7 +10,7 @@ button,input,select { font:inherit; }
 a { transition: color .2s ease, transform .2s ease, box-shadow .2s ease; }
 .brand-header { position:relative; }
 .brand-header::after { content:""; position:absolute; bottom:0; left:1.5rem; right:1.5rem; height:1px; background:linear-gradient(90deg, transparent, rgba(23,23,27,.13), transparent); }
-.hero-panel { position:relative; overflow:hidden; border:1px solid rgba(23,23,27,.09); border-radius:2rem; background:linear-gradient(135deg, #19191e 0%, #25202b 52%, #19191e 100%); color:#fff; box-shadow:0 24px 70px rgba(29,17,29,.17); }
+.hero-panel { position:relative; overflow:visible; border:1px solid rgba(23,23,27,.09); border-radius:2rem; background:linear-gradient(135deg, #19191e 0%, #25202b 52%, #19191e 100%); color:#fff; box-shadow:0 24px 70px rgba(29,17,29,.17); }
 .hero-panel::before { content:""; position:absolute; inset:auto -10% -50% auto; width:34rem; height:34rem; border-radius:999px; background:radial-gradient(circle, rgba(237,31,91,.82), rgba(237,31,91,0) 66%); filter:blur(6px); pointer-events:none; }
 .hero-panel > * { position:relative; }
 .hero-panel [class*="absolute"][class*="overflow-hidden"] { max-height:18rem; overflow-y:auto; overscroll-behavior:contain; }
