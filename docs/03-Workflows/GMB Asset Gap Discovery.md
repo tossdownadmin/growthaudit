@@ -147,9 +147,11 @@ The confirmed restaurant input retains `googleWebsiteUrl` as the original Google
 
 ### Confirmation step
 
-- Pre-fill a verified brand website/social profile.
-- Add a visible badge: **Found independently — missing from Google Business Profile** when appropriate.
-- Require owner confirmation for any candidate that is not verified.
+- Pre-fill a verified brand website/social profile. A plausible search-discovered website must also be pre-filled when the Google website field is blank, but it must be labelled as requiring owner confirmation rather than claimed as verified.
+- Add a visible message when a website was discovered while Google is blank: **Website found independently — not linked on this Google Business Profile.**
+- For each search-discovered social profile, state: **Found by public search — not linked on the website or Google Business Profile.** Do not make this claim for profiles extracted from the restaurant website.
+- Website is mandatory to continue, but do not use an asterisk. If no website can be found, show: **Website could not be found publicly. Add your website URL to continue; it is also missing from your Google Business Profile.**
+- Require owner confirmation for any candidate that is not verified. A manually entered or candidate URL is the owner confirmation at this stage.
 
 ### Audit report
 
