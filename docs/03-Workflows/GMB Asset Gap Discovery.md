@@ -96,7 +96,7 @@ A social profile becomes verified only when at least one of these is true:
 2. Its canonical URL/handle is returned by a high-confidence brand search result and its displayed name/bio/domain matches the restaurant.
 3. It uses a verified-domain link that points back to the verified restaurant website.
 
-When a verified restaurant website has no link to a core social platform, the discovery service must run a platform-specific brand search using the restaurant name, locality, and verified website domain. A search result is automatically usable only when its platform URL, result title/description, and restaurant identity form a high-confidence match. Its source remains `search`, and the report must state: **Official profile found by search — add it to your website so customers can verify the connection.**
+When a core social platform is absent—whether or not a website has been found—the discovery service must run a platform-specific brand search using the restaurant name and city/locality. Do not require an individual branch’s complete address to be present on a chain-level brand profile. A search result is automatically usable only when its platform URL/handle and result title or description form a high-confidence brand match. Its source remains `search`, and the report must state: **Official brand profile found by search — it is not linked on this branch’s website or Google profile.**
 
 Never call a generic hashtag, fan account, branch-inaccurate account, delivery marketplace, or unrelated same-name account official.
 
@@ -112,7 +112,7 @@ When GMB has no website, query using the restaurant’s name plus locality/addre
 
 If a verified website is found, fetch it and use first-party links, `sameAs` schema, and `rel="me"` links as the preferred source for official social profiles. Search-only social results are lower-confidence fallback candidates.
 
-For each core platform missing from the verified website, run a dedicated query rather than one broad multi-platform query. This prevents a strong Instagram result from hiding an absent Facebook or TikTok result.
+For each missing core platform, run a dedicated query rather than one broad multi-platform query. Use the city/locality rather than a Plus Code or full street address for social-profile queries, because official chain accounts rarely publish each individual branch address. This prevents a strong Instagram result from hiding an absent Facebook or TikTok result.
 
 ## Data contract
 

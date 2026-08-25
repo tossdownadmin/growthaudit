@@ -215,6 +215,18 @@ function addressEvidence(address: string, pageText: string): boolean {
   return meaningful.length > 0 && meaningful.filter((word) => pageText.includes(word)).length >= Math.min(2, meaningful.length)
 }
 
+function socialSearchLocality(address: string): string {
+  return address.split(',').map((part) => part.trim()).reverse()
+    .find((part) => /[a-z]/i.test(part) && !/^(pakistan|united states|usa|uk|united kingdom)$/i.test(part)) ?? ''
+}
+
+function isLikelyOfficialProfile(brandWords: string[], match: { url: string }, resultText: string): boolean {
+  if (!hasBrandMatch(brandWords, resultText)) return false
+  const handle = new URL(match.url).pathname.replace(/^\/+/, '').toLowerCase()
+  // A one-word brand needs both a matching result label and a matching handle.
+  return brandWords.length > 1 || brandWords.some((word) => handle.includes(word))
+}
+
 type SearchResult = { url?: string; title?: string; snippet?: string; description?: string; displayed_link?: string; domain?: string }
 
 /**
@@ -224,7 +236,10 @@ type SearchResult = { url?: string; title?: string; snippet?: string; descriptio
  */
 async function searchGoogle(query: string, timeoutMs = 12_000): Promise<SearchResult[]> {
   const apiKey = process.env.SERPAPI_API_KEY
-  if (!apiKey || !query.trim()) return []
+  if (!apiKey || !query.trim()) {
+    if (query.trim()) debugLog('social.serpapi', 'Search skipped because SERPAPI_API_KEY is not configured')
+    return []
+  }
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -308,9 +323,8 @@ export async function discoverBrandAssets(name: string, address: string): Promis
 }
 
 /**
- * Searches each missing core platform independently after a verified website
- * has been inspected. Unlike broad social discovery, this only returns a URL
- * when the platform result itself carries a strong restaurant-name match.
+ * Searches each missing core platform independently, including when no
+ * website exists. Chain-level profiles rarely contain a branch's full address.
  */
 export async function discoverVerifiedSocialsFromSearch(
   name: string,
@@ -326,13 +340,13 @@ export async function discoverVerifiedSocialsFromSearch(
       const hostHint: Record<SocialPlatform, string> = {
         instagram: 'instagram.com', facebook: 'facebook.com', tiktok: 'tiktok.com', youtube: 'youtube.com', twitter: 'x.com OR twitter.com', threads: 'threads.net', linkedin: 'linkedin.com', pinterest: 'pinterest.com', snapchat: 'snapchat.com', whatsapp: 'wa.me',
       }
-      const keyword = `site:${hostHint[platform]} \"${name}\" ${address}`.replace(/\s+/g, ' ').trim()
+      const keyword = `site:${hostHint[platform]} \"${name}\" ${socialSearchLocality(address)}`.replace(/\s+/g, ' ').trim()
       const items = await searchGoogle(keyword)
       for (const item of items) {
         const match = classifyUrl(String(item?.url || ''))
         if (!match || match.platform !== platform) continue
         const resultText = `${item?.title ?? ''} ${item?.description ?? ''}`
-        if (!hasBrandMatch(brandWords, resultText)) continue
+        if (!isLikelyOfficialProfile(brandWords, match, resultText)) continue
         return {
           kind: 'social',
           platform,
@@ -340,7 +354,7 @@ export async function discoverVerifiedSocialsFromSearch(
           source: 'search',
           verification: 'verified_brand_asset',
           confidence: 'medium',
-          evidence: ['Profile matched the restaurant name in a platform-specific brand and location search', 'This official profile is not linked from the restaurant website'],
+          evidence: ['Profile handle and result text matched the restaurant brand in a platform-specific city search', 'This official brand profile is not linked from this branch’s website or Google profile'],
         }
       }
     } catch (error) {
@@ -355,6 +369,7 @@ export async function discoverVerifiedSocialsFromSearch(
     empty.socials[asset.platform] = asset.url
     empty.assets.push(asset)
   }
+  debugLog('social.brand-search', 'Verified platform search completed', { name, locality: socialSearchLocality(address), requestedPlatforms: platforms, foundPlatforms: Object.keys(empty.socials) })
   return empty
 }
 

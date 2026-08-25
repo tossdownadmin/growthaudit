@@ -53,11 +53,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Search every core platform that the verified website does not link. A
-  // platform-specific search has stronger ownership rules than the legacy
-  // broad discovery fallback and is safe to prefill as an official asset.
+  // Search every missing core platform even when no website was found. A
+  // chain-level official profile is verified independently of website discovery.
   const missingCore = CORE_PLATFORMS.filter((p) => !socials[p])
-  if (name && websiteUrl && missingCore.length) {
+  if (name && missingCore.length) {
     try {
       const verified = await discoverVerifiedSocialsFromSearch(name, address, [...missingCore])
       for (const [platform, link] of Object.entries(verified.socials)) {
