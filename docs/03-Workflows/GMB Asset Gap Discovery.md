@@ -96,6 +96,8 @@ A social profile becomes verified only when at least one of these is true:
 2. Its canonical URL/handle is returned by a high-confidence brand search result and its displayed name/bio/domain matches the restaurant.
 3. It uses a verified-domain link that points back to the verified restaurant website.
 
+When a verified restaurant website has no link to a core social platform, the discovery service must run a platform-specific brand search using the restaurant name, locality, and verified website domain. A search result is automatically usable only when its platform URL, result title/description, and restaurant identity form a high-confidence match. Its source remains `search`, and the report must state: **Official profile found by search — add it to your website so customers can verify the connection.**
+
 Never call a generic hashtag, fan account, branch-inaccurate account, delivery marketplace, or unrelated same-name account official.
 
 ## Search strategy
@@ -109,6 +111,8 @@ When GMB has no website, query using the restaurant’s name plus locality/addre
 - social URLs as website candidates
 
 If a verified website is found, fetch it and use first-party links, `sameAs` schema, and `rel="me"` links as the preferred source for official social profiles. Search-only social results are lower-confidence fallback candidates.
+
+For each core platform missing from the verified website, run a dedicated query rather than one broad multi-platform query. This prevents a strong Instagram result from hiding an absent Facebook or TikTok result.
 
 ## Data contract
 
@@ -147,6 +151,7 @@ The confirmed restaurant input retains `googleWebsiteUrl` as the original Google
 
 - Without a configured search provider, do not invent a website; return `not_found`/unavailable discovery evidence.
 - If search finds candidates but verification fails, surface them only for owner confirmation.
+- If a platform-specific search has high-confidence brand evidence but the website does not link to that profile, use it as a verified search-discovered social asset and flag the missing website connection.
 - A website fetch failure after a strong search result should preserve the candidate with reduced confidence, not treat it as verified.
 - Provider failures must not block the normal audit flow.
 

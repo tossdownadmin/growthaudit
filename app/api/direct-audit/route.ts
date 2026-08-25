@@ -408,6 +408,7 @@ export async function POST(req: NextRequest) {
         configured: social.configured,
         discovered: social.discovered,
         profiles: social.profiles,
+        brandAssets: (input as any).brandAssets ?? [],
         // Runtime diagnostics so the deployed report can explain itself without
         // a separate endpoint. keyPresent reflects the ACTUAL runtime env of the
         // deployment serving this audit — if false, the key isn't set in the

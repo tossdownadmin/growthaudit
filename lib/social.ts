@@ -290,6 +290,72 @@ export async function discoverBrandAssets(name: string, address: string): Promis
 }
 
 /**
+ * Searches each missing core platform independently after a verified website
+ * has been inspected. Unlike broad social discovery, this only returns a URL
+ * when the platform result itself carries a strong restaurant-name match.
+ */
+export async function discoverVerifiedSocialsFromSearch(
+  name: string,
+  address: string,
+  platforms: SocialPlatform[],
+): Promise<{ socials: DiscoveredSocials; assets: BrandAsset[] }> {
+  const empty = { socials: {} as DiscoveredSocials, assets: [] as BrandAsset[] }
+  const login = process.env.DATAFORSEO_LOGIN
+  const password = process.env.DATAFORSEO_PASSWORD
+  const brandWords = normalizedWords(name)
+  if (!login || !password || !name.trim() || !platforms.length || !brandWords.length) return empty
+
+  const auth = Buffer.from(`${login}:${password}`).toString('base64')
+  const searchOne = async (platform: SocialPlatform): Promise<BrandAsset | null> => {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 12000)
+    try {
+      const hostHint: Record<SocialPlatform, string> = {
+        instagram: 'instagram.com', facebook: 'facebook.com', tiktok: 'tiktok.com', youtube: 'youtube.com', twitter: 'x.com OR twitter.com', threads: 'threads.net', linkedin: 'linkedin.com', pinterest: 'pinterest.com', snapchat: 'snapchat.com', whatsapp: 'wa.me',
+      }
+      const keyword = `site:${hostHint[platform]} \"${name}\" ${address}`.replace(/\s+/g, ' ').trim()
+      const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
+        method: 'POST',
+        headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify([{ keyword, location_code: 2840, language_code: 'en', depth: 10 }]),
+        signal: controller.signal,
+      })
+      if (!res.ok) return null
+      const body = await res.json().catch(() => null)
+      const items = Array.isArray(body?.tasks?.[0]?.result?.[0]?.items) ? body.tasks[0].result[0].items : []
+      for (const item of items) {
+        const match = classifyUrl(String(item?.url || ''))
+        if (!match || match.platform !== platform) continue
+        const resultText = `${item?.title ?? ''} ${item?.description ?? ''}`
+        if (!hasBrandMatch(brandWords, resultText)) continue
+        return {
+          kind: 'social',
+          platform,
+          url: match.url,
+          source: 'search',
+          verification: 'verified_brand_asset',
+          confidence: 'medium',
+          evidence: ['Profile matched the restaurant name in a platform-specific brand and location search', 'This official profile is not linked from the restaurant website'],
+        }
+      }
+    } catch (error) {
+      debugError('social.brand-search', 'Platform social discovery failed', error, { platform, name })
+    } finally {
+      clearTimeout(timer)
+    }
+    return null
+  }
+
+  const matches = await Promise.all(platforms.map(searchOne))
+  for (const asset of matches) {
+    if (!asset?.platform) continue
+    empty.socials[asset.platform] = asset.url
+    empty.assets.push(asset)
+  }
+  return empty
+}
+
+/**
  * Discover a restaurant's social profiles from Google (via DataForSEO SERP) when
  * the website has none. Best-effort: any failure returns {} so the caller can
  * carry on. Results are only DISCOVERY suggestions — the user confirms/edits them.

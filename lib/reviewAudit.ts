@@ -264,80 +264,74 @@ export function computeReviewMetrics(reviews: NormalizedGoogleReview[], response
   }
 }
 
-const TOPIC_STOP_WORDS = new Set([
-  'about', 'after', 'again', 'also', 'always', 'amazing', 'and', 'are', 'around', 'back', 'been', 'best', 'better', 'but', 'came', 'come', 'could', 'definitely', 'delicious', 'did', 'does', 'first', 'for', 'from', 'get', 'good', 'great', 'had', 'has', 'have', 'here', 'highly', 'just', 'like', 'love', 'loved', 'more', 'most', 'much', 'nice', 'not', 'our', 'place', 'really', 'restaurant', 'return', 'that', 'the', 'their', 'them', 'this', 'very', 'was', 'were', 'will', 'with', 'would', 'you', 'your',
-])
-const SERVICE_TERMS = new Set(['service', 'server', 'servers', 'waiter', 'waitress', 'wait', 'waiting', 'staff', 'manager', 'friendly', 'rude', 'host', 'cashier', 'customer'])
-const EXPERIENCE_TERMS = new Set(['atmosphere', 'ambiance', 'ambience', 'music', 'clean', 'cleanliness', 'parking', 'location', 'crowded', 'noise', 'noisy', 'seating', 'decor'])
-const GENERIC_PRODUCT_TERMS = new Set(['food', 'menu', 'dish', 'meal', 'portion', 'taste', 'flavor', 'flavour', 'quality', 'fresh', 'price', 'prices', 'value'])
-
 type TopicAccumulator = {
-  phrase: string
+  topic: string
   category: ReviewTopicCategory
-  ratings: number[]
+  sentiments: Array<'positive' | 'negative' | 'neutral'>
   examples: string[]
 }
 
-function topicWords(text: string): string[] {
-  return String(text || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s'-]/g, ' ')
-    .split(/\s+/)
-    .map((word) => word.replace(/^'+|'+$/g, ''))
-    .filter((word) => word.length >= 3 && !TOPIC_STOP_WORDS.has(word) && !/^\d+$/.test(word))
-}
+type ThemeCandidate = { key: string; topic: string; category: ReviewTopicCategory; sentiment: 'positive' | 'negative' | 'neutral' }
 
-function topicCategory(words: string[]): ReviewTopicCategory {
-  if (words.some((word) => SERVICE_TERMS.has(word))) return 'service'
-  if (words.some((word) => EXPERIENCE_TERMS.has(word))) return 'experience'
-  return 'product'
-}
+const titleTopic = (value: string) => value.replace(/\b\w/g, (letter) => letter.toUpperCase())
 
-function titleTopic(value: string): string {
-  return value.replace(/\b\w/g, (letter) => letter.toUpperCase())
+/** Extract only predefined restaurant outcomes and qualified menu-item mentions — never raw words. */
+function reviewThemeCandidates(rawText: string, rating: number | null): ThemeCandidate[] {
+  const text = String(rawText || '').toLowerCase().replace(/\s+/g, ' ')
+  const fallback: ThemeCandidate['sentiment'] = rating !== null && rating <= 2 ? 'negative' : rating !== null && rating >= 4 ? 'positive' : 'neutral'
+  const out: ThemeCandidate[] = []
+  const add = (key: string, topic: string, category: ReviewTopicCategory, sentiment = fallback) => out.push({ key, topic, category, sentiment })
+  const has = (pattern: RegExp) => pattern.test(text)
+
+  if (has(/\b(wait(?:ed|ing)?|slow service|took forever|long wait|late service)\b/)) add('slow-service', 'Slow service', 'service', 'negative')
+  if (has(/\b(friendly|helpful|professional|courteous|attentive)\b/) && has(/\b(staff|service|server|team|manager)\b/)) add('friendly-staff', 'Friendly staff', 'service', 'positive')
+  if (has(/\b(rude|unhelpful|ignored|impolite)\b/) && has(/\b(staff|service|server|team|manager)\b/)) add('staff-courtesy', 'Staff courtesy', 'service', 'negative')
+  if (has(/\b(wrong order|missing item|forgot|incorrect order|order mistake)\b/)) add('order-accuracy', 'Order accuracy', 'service', 'negative')
+  if (has(/\b(replaced|refund|fixed it|made it right|apologized)\b/) && has(/\b(manager|staff|service|order|food)\b/)) add('problem-recovery', 'Problem recovery', 'service', 'positive')
+  if (has(/\b(cold|lukewarm|not hot|arrived hot)\b/) && has(/\b(food|burger|pizza|fries|meal|dish|order)\b/)) add('food-temperature', 'Food temperature', 'product', has(/\b(cold|lukewarm|not hot)\b/) ? 'negative' : 'positive')
+  if (has(/\b(dry|overcooked|undercooked|soggy|juicy)\b/) && has(/\b(food|burger|pizza|fries|meal|dish|wrap)\b/)) add('food-preparation', 'Food preparation', 'product', has(/\b(dry|overcooked|undercooked|soggy)\b/) ? 'negative' : 'positive')
+  if (has(/\b(stale|not fresh|fresh ingredients|fresh food)\b/)) add('food-freshness', 'Food freshness', 'product', has(/\b(stale|not fresh)\b/) ? 'negative' : 'positive')
+  if (has(/\b(portion|serving size|small serving|large serving|generous portion)\b/)) add('portion-size', 'Portion size', 'product', has(/\b(small|tiny|less)\b/) ? 'negative' : fallback)
+  if (has(/\b(expensive|overpriced|pricey|good value|value for money|worth it)\b/)) add('value-for-money', 'Value for money', 'product', has(/\b(expensive|overpriced|pricey)\b/) ? 'negative' : 'positive')
+  if (has(/\b(tasty|delicious|flavorful|flavourful|bland|tasteless)\b/) && has(/\b(food|burger|pizza|biryani|wrap|fries|meal|dish)\b/)) add('food-flavor', 'Food flavor', 'product', has(/\b(bland|tasteless)\b/) ? 'negative' : 'positive')
+  if (has(/\b(clean|dirty|unclean)\b/) && has(/\b(place|restaurant|table|dining|area|washroom)\b/)) add('cleanliness', 'Cleanliness', 'experience', has(/\b(dirty|unclean)\b/) ? 'negative' : 'positive')
+  if (has(/\b(atmosphere|ambiance|ambience|music|noisy|crowded)\b/)) add('atmosphere', 'Dining atmosphere', 'experience', has(/\b(noisy|crowded)\b/) ? 'negative' : fallback)
+  if (has(/\b(parking|parked)\b/)) add('parking', 'Parking and access', 'experience', has(/\b(no parking|difficult parking|parking issue)\b/) ? 'negative' : fallback)
+  if (has(/\b(delivery|delivered)\b/) && has(/\b(late|cold|damaged|fast|quick)\b/)) add('delivery-reliability', 'Delivery reliability', 'experience', has(/\b(late|cold|damaged)\b/) ? 'negative' : 'positive')
+
+  const product = text.match(/\b([a-z]{3,})\s+(burger|pizza|biryani|wrap|fries|pasta|steak|shawarma|kebab|coffee|dessert|shake)\b/)
+  if (product && !['the', 'my', 'our', 'your', 'this', 'that', 'good', 'great', 'tasty', 'delicious'].includes(product[1]) && has(/\b(dry|cold|juicy|fresh|stale|tasty|delicious|bland|overcooked|undercooked)\b/)) {
+    const label = titleTopic(`${product[1]} ${product[2]}`)
+    add(`menu-item:${product[1]}-${product[2]}`, label, 'product', has(/\b(dry|cold|stale|bland|overcooked|undercooked)\b/) ? 'negative' : 'positive')
+  }
+  return [...new Map(out.map((candidate) => [candidate.key, candidate])).values()]
 }
 
 /**
- * Builds an honest public word/topic map without an LLM. Topics must repeat in
- * at least two distinct reviews, and callers should only publish it from a
- * sufficiently large Outscraper corpus. Review rating is the stable sentiment
- * anchor instead of guessing sentiment from isolated adjectives.
+ * Builds only actionable restaurant themes. It intentionally returns no theme
+ * for unclassifiable review language rather than displaying a raw word cluster.
  */
 export function buildReviewTopicMap(reviews: NormalizedGoogleReview[]): ReviewTopic[] {
   if (reviews.length < 5) return []
 
-  const phrases = new Map<string, TopicAccumulator>()
+  const themes = new Map<string, TopicAccumulator>()
   for (const review of reviews) {
-    const words = topicWords(review.text)
-    if (!words.length) continue
-    const candidates = new Set<string>()
-
-    for (const word of words) {
-      if (!GENERIC_PRODUCT_TERMS.has(word) && !SERVICE_TERMS.has(word) && !EXPERIENCE_TERMS.has(word)) candidates.add(word)
-    }
-    for (let index = 0; index < words.length - 1; index += 1) {
-      const pair = [words[index], words[index + 1]]
-      if (pair.every((word) => GENERIC_PRODUCT_TERMS.has(word))) continue
-      if (pair.some((word) => SERVICE_TERMS.has(word) || EXPERIENCE_TERMS.has(word)) || pair.some((word) => !GENERIC_PRODUCT_TERMS.has(word))) candidates.add(pair.join(' '))
-    }
-
-    for (const phrase of candidates) {
-      const category = topicCategory(phrase.split(' '))
-      const current = phrases.get(phrase) ?? { phrase, category, ratings: [], examples: [] }
-      if (typeof review.rating === 'number') current.ratings.push(review.rating)
+    for (const candidate of reviewThemeCandidates(review.text, review.rating)) {
+      const current = themes.get(candidate.key) ?? { topic: candidate.topic, category: candidate.category, sentiments: [], examples: [] }
+      current.sentiments.push(candidate.sentiment)
       if (review.text && current.examples.length < 2) current.examples.push(review.text.slice(0, 180))
-      phrases.set(phrase, current)
+      themes.set(candidate.key, current)
     }
   }
 
   const confidence: ReviewTopicConfidence = reviews.length >= 20 ? 'high' : reviews.length >= 10 ? 'medium' : 'limited'
-  return [...phrases.values()]
-    .filter((entry) => entry.ratings.length >= 2)
+  return [...themes.values()]
+    .filter((entry) => entry.sentiments.length >= 2)
     .map((entry) => {
-      const positiveMentions = entry.ratings.filter((rating) => rating >= 4).length
-      const negativeMentions = entry.ratings.filter((rating) => rating <= 2).length
-      const neutralMentions = entry.ratings.filter((rating) => rating === 3).length
-      const mentions = entry.ratings.length
+      const positiveMentions = entry.sentiments.filter((sentiment) => sentiment === 'positive').length
+      const negativeMentions = entry.sentiments.filter((sentiment) => sentiment === 'negative').length
+      const neutralMentions = entry.sentiments.filter((sentiment) => sentiment === 'neutral').length
+      const mentions = entry.sentiments.length
       const sentiment: ReviewTopicSentiment = positiveMentions / mentions >= 0.7
         ? 'positive'
         : negativeMentions / mentions >= 0.5
@@ -345,7 +339,7 @@ export function buildReviewTopicMap(reviews: NormalizedGoogleReview[]): ReviewTo
           : neutralMentions / mentions >= 0.6
             ? 'neutral'
             : 'mixed'
-      return { topic: titleTopic(entry.phrase), category: entry.category, sentiment, mentions, positiveMentions, negativeMentions, neutralMentions, confidence, examples: entry.examples }
+      return { topic: entry.topic, category: entry.category, sentiment, mentions, positiveMentions, negativeMentions, neutralMentions, confidence, examples: entry.examples }
     })
     .sort((a, b) => b.mentions - a.mentions || b.negativeMentions - a.negativeMentions || a.topic.localeCompare(b.topic))
     .slice(0, 12)

@@ -7,7 +7,7 @@ tags:
   - reviews
   - themes
   - specification
-status: proposed
+status: in_progress
 source:
   - lib/reviewAudit.ts
   - app/api/direct-audit/route.ts
@@ -139,6 +139,8 @@ The extractor must seek these forms:
 - ordering/outcome patterns: `late delivery`, `damaged packaging`, `easy online ordering`
 
 It must not emit individual tokens as a theme unless the token is a verified, restaurant-specific menu item and repeats across independent reviews.
+
+The initial deterministic implementation must use a closed set of restaurant outcomes (for example `Slow service`, `Food temperature`, `Order accuracy`, `Value for money`) plus qualified product outcomes (for example `Burger dryness`). It must return no theme rather than falling back to a raw word when a sentence cannot be classified safely.
 
 ### 3. Canonicalize before counting
 

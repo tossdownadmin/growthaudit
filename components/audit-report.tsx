@@ -516,7 +516,8 @@ function SocialActivity({social}:{social:any}){
   if(!social)return null
   const profiles=social.profiles??[]
   const reliable=profiles.filter((p:any)=>p.status!=='unavailable'&&Number(p.evidenceConfidence||0)>=0.45&&p.postsAnalyzed>=4)
-  if(!reliable.length)return null
+  const searchDiscovered=(social.brandAssets??[]).filter((asset:any)=>asset.kind==='social'&&asset.source==='search'&&asset.verification==='verified_brand_asset')
+  if(!reliable.length&&!searchDiscovered.length)return null
   const summary='Activity is shown only where the public post sample is strong enough to support a real recency or posting-frequency conclusion.'
   const rendered=reliable
   return <section className="mb-10">
@@ -525,6 +526,7 @@ function SocialActivity({social}:{social:any}){
       <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">Is this an active customer relationship channel?</h2>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{summary}</p>
     </div>
+    {searchDiscovered.length>0&&<div className="mb-4 rounded-2xl border border-warning/40 bg-warning/10 p-5 text-sm"><p className="font-semibold text-foreground">Official social profile found — missing from the restaurant website</p><p className="mt-2 leading-6 text-muted-foreground">We verified {searchDiscovered.map((asset:any)=>PLATFORM_LABEL[asset.platform]||asset.platform).join(', ')} through a platform-specific brand search. Add {searchDiscovered.length===1?'this profile':'these profiles'} to the official website so customers can verify the connection and move between channels.</p></div>}
     {rendered.length>0&&<div className="grid gap-4 md:grid-cols-2">{rendered.map((p:any)=><SocialCard key={`${p.platform}-${p.url}`} p={p}/>)}</div>}
   </section>
 }
@@ -747,8 +749,8 @@ function ReviewsPanel({reviews,interpretation}:{reviews:any;interpretation:any})
       </div>}
 
     {hasTopicMap&&<div className="mt-6 rounded-2xl border border-border bg-card p-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-2"><p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Customer word &amp; topic map</p><span className="text-xs text-muted-foreground">{sampleSize} recent reviews · {topics[0]?.confidence||'limited'} confidence</span></div>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Repeated public language grouped without AI. Product topics show what guests mention; service and experience topics show how the visit feels.</p>
+      <div className="flex flex-wrap items-baseline justify-between gap-2"><p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">What customers repeatedly mention</p><span className="text-xs text-muted-foreground">{sampleSize} recent reviews · {topics[0]?.confidence||'limited'} confidence</span></div>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Repeated restaurant themes, not a word cloud. These cover specific menu items, food outcomes, service, and the visit experience.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {topics.slice(0,8).map((topic:any,index:number)=>{
           const sentiment=String(topic?.sentiment||'mixed').toLowerCase()

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchWebsiteHtml } from '@/lib/audit'
-import { extractSocialLinks, discoverBrandAssets, discoverSocialsFromGoogle, type BrandAsset, type DiscoveredSocials } from '@/lib/social'
+import { extractSocialLinks, discoverBrandAssets, discoverSocialsFromGoogle, discoverVerifiedSocialsFromSearch, type BrandAsset, type DiscoveredSocials } from '@/lib/social'
 import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
 
 export const runtime = 'nodejs'
@@ -53,10 +53,26 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Google fallback when the site is missing any core platform. Merged so
-  // website-found links always win; Google only fills the gaps.
+  // Search every core platform that the verified website does not link. A
+  // platform-specific search has stronger ownership rules than the legacy
+  // broad discovery fallback and is safe to prefill as an official asset.
   const missingCore = CORE_PLATFORMS.filter((p) => !socials[p])
-  if (name && missingCore.length) {
+  if (name && websiteUrl && missingCore.length) {
+    try {
+      const verified = await discoverVerifiedSocialsFromSearch(name, address, [...missingCore])
+      for (const [platform, link] of Object.entries(verified.socials)) {
+        if (link && !socials[platform as keyof DiscoveredSocials]) socials[platform as keyof DiscoveredSocials] = link
+      }
+      assets.push(...verified.assets)
+    } catch (error) {
+      debugError('social.discover', 'Verified platform search failed', error, { name })
+    }
+  }
+
+  // Broad discovery remains a confirmation-only fallback. It never overrides
+  // website-linked or platform-verified profiles above.
+  const remainingCore = CORE_PLATFORMS.filter((p) => !socials[p])
+  if (name && remainingCore.length) {
     try {
       const fromGoogle = await discoverSocialsFromGoogle(name, address)
       for (const [platform, link] of Object.entries(fromGoogle)) {
