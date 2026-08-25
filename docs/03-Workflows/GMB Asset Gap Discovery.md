@@ -86,7 +86,7 @@ Use a weighted match from the candidate website and selected Google business:
 | Google-result title and domain clearly name the restaurant | supporting |
 | generic directory, delivery marketplace, review site, or social platform domain | automatic rejection as website |
 
-Require either two high-strength signals, or one high-strength plus two supporting signals. A candidate without enough evidence becomes `candidate_needs_confirmation`.
+Require either two high-strength signals, or one high-strength plus two supporting signals. For a multi-location brand, a brand match in the candidate website title/heading plus city-level evidence is sufficient location evidence; do not demand the selected branch’s complete street address on a central brand site. A candidate without enough evidence becomes `candidate_needs_confirmation`.
 
 ### Social verification
 

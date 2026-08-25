@@ -13,6 +13,7 @@ a { transition: color .2s ease, transform .2s ease, box-shadow .2s ease; }
 .hero-panel { position:relative; overflow:hidden; border:1px solid rgba(23,23,27,.09); border-radius:2rem; background:linear-gradient(135deg, #19191e 0%, #25202b 52%, #19191e 100%); color:#fff; box-shadow:0 24px 70px rgba(29,17,29,.17); }
 .hero-panel::before { content:""; position:absolute; inset:auto -10% -50% auto; width:34rem; height:34rem; border-radius:999px; background:radial-gradient(circle, rgba(237,31,91,.82), rgba(237,31,91,0) 66%); filter:blur(6px); pointer-events:none; }
 .hero-panel > * { position:relative; }
+.hero-panel [class*="absolute"][class*="overflow-hidden"] { max-height:18rem; overflow-y:auto; overscroll-behavior:contain; }
 .surface-card { border:1px solid rgba(23,23,27,.09); box-shadow:0 12px 30px rgba(37,28,28,.045); }
 .report-hero { position:relative; overflow:hidden; border:1px solid rgba(23,23,27,.08); border-radius:2rem; background:linear-gradient(125deg, #fff 0%, #fff7fa 52%, #f3efff 100%); box-shadow:0 20px 50px rgba(47,31,41,.07); }
 .report-hero::after { content:""; position:absolute; width:15rem; height:15rem; right:-5rem; top:-7rem; border-radius:50%; background:#ed1f5b; opacity:.09; }

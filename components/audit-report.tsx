@@ -441,6 +441,16 @@ function GrowthEngineMap({audit}:{audit:any}){
   </section>
 }
 
+function OwnerReportMap(){
+  const stops=[
+    {href:'#engine',label:'Growth engine',detail:'Where demand leaks',icon:<Gauge className="h-4 w-4"/>},
+    {href:'#market',label:'Local market',detail:'Who diners compare',icon:<MapPin className="h-4 w-4"/>},
+    {href:'#voice',label:'Customer voice',detail:'What guests repeat',icon:<MessageSquare className="h-4 w-4"/>},
+    {href:'#evidence',label:'Technical proof',detail:'What supports the score',icon:<FileSearch className="h-4 w-4"/>},
+  ]
+  return <nav aria-label="Report sections" className="my-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{stops.map((stop,index)=><a key={stop.href} href={stop.href} className="surface-card group rounded-2xl bg-card p-4 hover:-translate-y-0.5 hover:border-primary"><div className="flex items-center justify-between"><span className="font-mono text-xs" style={{color:pink}}>0{index+1}</span><span className="text-muted-foreground group-hover:text-primary">{stop.icon}</span></div><p className="mt-4 text-sm font-semibold">{stop.label}</p><p className="mt-1 text-xs text-muted-foreground">{stop.detail}</p></a>)}</nav>
+}
+
 export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
   const r=audit.result
   const i=audit.interpretation
@@ -458,17 +468,14 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
           <div className="rounded-3xl bg-foreground px-6 py-5 text-white shadow-2xl"><div className="text-7xl font-semibold leading-none tracking-[-0.08em]">{r.score}</div><div className="mt-2 text-sm text-white/65">Growth Engine Score · out of 100</div></div>
         </div>
       </div>
-
-      <GrowthPillars result={r}/>
-      <GrowthLeaks interpretation={i}/>
-      <WebsiteOrderingGrowth audit={audit}/>
-      <CompetitorBenchmarkPanel audit={audit}/>
-      <ReviewsPanel reviews={audit.reviews} interpretation={i}/>
-      <SocialActivity social={audit.social}/>
+      <OwnerReportMap/>
+      <div id="engine"><GrowthPillars result={r}/><GrowthLeaks interpretation={i}/><WebsiteOrderingGrowth audit={audit}/></div>
+      <div id="market"><CompetitorBenchmarkPanel audit={audit}/></div>
+      <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><SocialActivity social={audit.social}/></div>
       <PaidMediaReadiness result={r} interpretation={i}/>
       <GrowthEngineMap audit={audit}/>
 
-      <div className="border-t border-border pt-12">
+      <div id="evidence" className="border-t border-border pt-12">
         <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{color:pink}}>Supporting technical evidence</p>
         <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">The details behind the score</h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">These checks explain the diagnosis. They matter, but they are intentionally secondary to the restaurant-owner questions above.</p>
@@ -517,7 +524,8 @@ function SocialActivity({social}:{social:any}){
   const profiles=social.profiles??[]
   const reliable=profiles.filter((p:any)=>p.status!=='unavailable'&&Number(p.evidenceConfidence||0)>=0.45&&p.postsAnalyzed>=4)
   const searchDiscovered=(social.brandAssets??[]).filter((asset:any)=>asset.kind==='social'&&asset.source==='search'&&asset.verification==='verified_brand_asset')
-  if(!reliable.length&&!searchDiscovered.length)return null
+  const officialProfiles=Object.entries(social.discovered??{}).filter(([,url])=>typeof url==='string'&&url) as Array<[string,string]>
+  if(!reliable.length&&!searchDiscovered.length&&!officialProfiles.length)return null
   const summary='Activity is shown only where the public post sample is strong enough to support a real recency or posting-frequency conclusion.'
   const rendered=reliable
   return <section className="mb-10">
@@ -527,6 +535,7 @@ function SocialActivity({social}:{social:any}){
       <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{summary}</p>
     </div>
     {searchDiscovered.length>0&&<div className="mb-4 rounded-2xl border border-warning/40 bg-warning/10 p-5 text-sm"><p className="font-semibold text-foreground">Official social profile found — missing from the restaurant website</p><p className="mt-2 leading-6 text-muted-foreground">We verified {searchDiscovered.map((asset:any)=>PLATFORM_LABEL[asset.platform]||asset.platform).join(', ')} through a platform-specific brand search. Add {searchDiscovered.length===1?'this profile':'these profiles'} to the official website so customers can verify the connection and move between channels.</p></div>}
+    {officialProfiles.length>0&&<div className="mb-4 rounded-2xl border border-border bg-card p-5"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Official profiles found</p><div className="mt-3 flex flex-wrap gap-2">{officialProfiles.map(([platform,url])=><a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-sm font-medium hover:border-primary hover:text-primary">{socialIcon(platform)}{PLATFORM_LABEL[platform]||platform}<ExternalLink className="h-3.5 w-3.5"/></a>)}</div><p className="mt-3 text-xs leading-5 text-muted-foreground">Profile presence is confirmed separately from activity measurement, so a provider data gap does not hide an official channel.</p></div>}
     {rendered.length>0&&<div className="grid gap-4 md:grid-cols-2">{rendered.map((p:any)=><SocialCard key={`${p.platform}-${p.url}`} p={p}/>)}</div>}
   </section>
 }

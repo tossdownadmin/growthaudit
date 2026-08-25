@@ -204,6 +204,11 @@ function addressEvidence(address: string, pageText: string): boolean {
   return meaningful.length > 0 && meaningful.filter((word) => pageText.includes(word)).length >= Math.min(2, meaningful.length)
 }
 
+function localityEvidence(address: string, pageText: string): boolean {
+  const locality = socialSearchLocality(address).toLowerCase()
+  return locality.length >= 3 && pageText.includes(locality)
+}
+
 function socialSearchLocality(address: string): string {
   return address.split(',').map((part) => part.trim()).reverse()
     .find((part) => /[a-z]/i.test(part) && !/^(pakistan|united states|usa|uk|united kingdom)$/i.test(part)) ?? ''
@@ -281,11 +286,13 @@ export async function discoverBrandAssets(name: string, address: string): Promis
       const pageText = $('body').text().replace(/\s+/g, ' ').toLowerCase()
       const titleOrHeadingMatch = hasBrandMatch(brandWords, `${title} ${headings}`)
       const locationMatch = addressEvidence(address, pageText)
+      const cityMatch = localityEvidence(address, pageText)
       const evidence: string[] = []
       if (searchBrandMatch) evidence.push('Brand name matched in a location-specific search result')
       if (titleOrHeadingMatch) evidence.push('Brand name matched the website title or heading')
       if (locationMatch) evidence.push('Google profile location matched text on the website')
-      const verified = titleOrHeadingMatch && locationMatch
+      if (!locationMatch && cityMatch) evidence.push('Google profile city matched text on the brand website')
+      const verified = titleOrHeadingMatch && (locationMatch || cityMatch)
       const confidence: BrandAsset['confidence'] = verified ? 'high' : titleOrHeadingMatch ? 'medium' : 'limited'
       const website: BrandAsset = {
         kind: 'website',
@@ -1047,7 +1054,7 @@ export async function auditSocialProfiles(
 
   if (!apiKey) {
     console.warn('[v0][social.config] SOCIALCRAWL_API_KEY is missing/empty at runtime — social activity will not be measured. Add it to the deployment environment and redeploy.')
-    return { configured: false, discovered, profiles: [], log: [] }
+    return { configured: false, discovered: merged, profiles: [], log: [] }
   }
 
   const targets = ANALYZED_PLATFORMS.map((platform) => ({ platform, url: merged[platform] }))
@@ -1063,7 +1070,7 @@ export async function auditSocialProfiles(
   })
 
   if (!targets.length) {
-    return { configured: true, discovered, profiles: [], log: [] }
+    return { configured: true, discovered: merged, profiles: [], log: [] }
   }
 
   const settled = await Promise.allSettled(
@@ -1083,7 +1090,7 @@ export async function auditSocialProfiles(
     }
   })
 
-  return { configured: true, discovered, profiles, log }
+  return { configured: true, discovered: merged, profiles, log }
 }
 
 // ---------------------------------------------------------------------------

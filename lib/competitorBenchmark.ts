@@ -718,28 +718,18 @@ async function buildUniversalCompetitorBenchmark(input: any, website: any): Prom
 }
 
 export async function buildCompetitorBenchmark(input: any, website: any): Promise<CompetitorBenchmark> {
-  // The dedicated V3 substitution/threat engine is the only source allowed to
-  // name competitors in the Growth Audit. If it is unavailable, fail closed:
-  // keep the rest of the audit healthy and show no competitor names.
+  // The V3 substitution/threat engine is the only source that can call rows
+  // direct competitors. If it is unavailable, retain useful Google Places
+  // context but label it as local reference points in the report.
   const universal = await buildUniversalCompetitorBenchmark(input, website)
   if (universal) return universal
-
+  const fallback = await buildLightweightCompetitorBenchmark(input, website)
   return {
-    status: 'unavailable',
-    source: 'none',
-    engineVersion: null,
-    confidence: 'limited',
+    ...fallback,
+    source: fallback.candidates.length ? 'local_fallback' : 'none',
+    engineVersion: fallback.candidates.length ? 'places-fallback' : null,
+    confidence: fallback.candidates.length >= 3 ? 'medium' : 'limited',
     presentationEligible: false,
-    query: '',
-    radiusKm: 5,
-    candidates: [],
-    summary: {
-      medianRating: null,
-      medianReviewCount: null,
-      directOrderingCount: null,
-      marketplaceOrderingCount: null,
-      orderingMeasuredCount: 0,
-    },
-    error: 'Dedicated competitor model unavailable.',
+    error: fallback.error ?? (fallback.candidates.length ? null : 'No local reference points were found.'),
   }
 }
