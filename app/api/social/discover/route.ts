@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchWebsiteHtml } from '@/lib/audit'
-import { extractSocialLinks, discoverBrandAssets, discoverVerifiedSocialsFromSearch, type BrandAsset, type DiscoveredSocials } from '@/lib/social'
+import { extractSocialLinks, discoverBrandAssets, discoverVerifiedSocialsFromSearch, type BrandAsset, type DiscoveredSocials, type DiscoverySearchDiagnostic } from '@/lib/social'
 import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
 
 export const runtime = 'nodejs'
@@ -16,6 +16,7 @@ type DiscoveryDiagnostics = {
   website: { requested: boolean; htmlAvailable: boolean; outcome: 'not_requested' | 'linked_website_read' | 'website_unavailable' | 'request_failed' }
   brandWebsite: { attempted: boolean; found: boolean; verification: string | null; assetCount: number; outcome: 'not_attempted' | 'candidate_found' | 'no_candidate' | 'request_failed' }
   socialSearch: { attempted: boolean; requestedPlatforms: string[]; foundPlatforms: string[]; outcome: 'not_attempted' | 'profiles_found' | 'no_verified_profiles' | 'request_failed' }
+  searches: DiscoverySearchDiagnostic[]
 }
 
 export async function GET(req: NextRequest) {
@@ -33,11 +34,12 @@ export async function GET(req: NextRequest) {
     website: { requested: Boolean(url), htmlAvailable: false, outcome: url ? 'website_unavailable' : 'not_requested' },
     brandWebsite: { attempted: false, found: false, verification: null, assetCount: 0, outcome: 'not_attempted' },
     socialSearch: { attempted: false, requestedPlatforms: [], foundPlatforms: [], outcome: 'not_attempted' },
+    searches: [],
   }
   // For a blank GMB website, run social discovery alongside the potential
   // website lookup. Waiting for the website before starting three provider
   // searches is what previously exceeded this route's 30-second budget.
-  let verifiedSocialPromise: Promise<{ socials: DiscoveredSocials; assets: BrandAsset[] }> | null = null
+  let verifiedSocialPromise: Promise<{ socials: DiscoveredSocials; assets: BrandAsset[]; diagnostics: DiscoverySearchDiagnostic[] }> | null = null
   if (!url && name) {
     diagnostics.stages.push('social_search_started_in_parallel')
     diagnostics.socialSearch.attempted = true
@@ -84,6 +86,7 @@ export async function GET(req: NextRequest) {
       diagnostics.brandWebsite.verification = discovered.website?.verification ?? null
       diagnostics.brandWebsite.assetCount = discovered.assets.length
       diagnostics.brandWebsite.outcome = discovered.website ? 'candidate_found' : 'no_candidate'
+      diagnostics.searches.push(...(discovered.diagnostics ?? []))
     } catch (error) {
       diagnostics.brandWebsite.outcome = 'request_failed'
       debugError('social.discover', 'Brand website discovery failed', error, { name })
@@ -106,6 +109,7 @@ export async function GET(req: NextRequest) {
         if (link && !socials[platform as keyof DiscoveredSocials]) socials[platform as keyof DiscoveredSocials] = link
       }
       assets.push(...verified.assets)
+      diagnostics.searches.push(...verified.diagnostics)
       diagnostics.socialSearch.foundPlatforms = Object.keys(verified.socials)
       diagnostics.socialSearch.outcome = diagnostics.socialSearch.foundPlatforms.length ? 'profiles_found' : 'no_verified_profiles'
     } catch (error) {

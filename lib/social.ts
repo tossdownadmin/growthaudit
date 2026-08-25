@@ -40,6 +40,13 @@ export type BrandAssetDiscovery = {
   website: BrandAsset | null
   socials: DiscoveredSocials
   assets: BrandAsset[]
+  diagnostics?: DiscoverySearchDiagnostic[]
+}
+
+export type DiscoverySearchDiagnostic = {
+  purpose: string
+  outcome: 'not_started' | 'skipped' | 'completed' | 'no_results' | 'provider_error' | 'timed_out'
+  resultCount: number
 }
 
 // Paths that indicate a share/intent widget rather than an owned profile.
@@ -228,9 +235,10 @@ type SearchResult = { url?: string; title?: string; snippet?: string; descriptio
  * the API key is never exposed to the browser and callers receive only the
  * small, provider-neutral result shape needed for brand verification.
  */
-async function searchGoogle(query: string, timeoutMs = 8_000): Promise<SearchResult[]> {
+async function searchGoogle(query: string, timeoutMs = 8_000, diagnostics?: DiscoverySearchDiagnostic): Promise<SearchResult[]> {
   const apiKey = process.env.SERPAPI_API_KEY
   if (!apiKey || !query.trim()) {
+    if (diagnostics) diagnostics.outcome = 'skipped'
     if (query.trim()) debugLog('social.serpapi', 'Search skipped because SERPAPI_API_KEY is not configured')
     return []
   }
@@ -244,13 +252,27 @@ async function searchGoogle(query: string, timeoutMs = 8_000): Promise<SearchRes
       cache: 'no-store',
     })
     if (!response.ok) {
+      if (diagnostics) diagnostics.outcome = 'provider_error'
       debugError('social.serpapi', 'Google search request failed', new Error(`HTTP ${response.status}`))
       return []
     }
     const body = await response.json().catch(() => null)
-    return Array.isArray(body?.organic_results) ? body.organic_results : []
+    if (body?.error) {
+      if (diagnostics) diagnostics.outcome = 'provider_error'
+      debugError('social.serpapi', 'Google search returned a provider error', new Error('Provider returned an error response'), { purpose: diagnostics?.purpose })
+      return []
+    }
+    const results = Array.isArray(body?.organic_results) ? body.organic_results : []
+    if (diagnostics) {
+      diagnostics.resultCount = results.length
+      diagnostics.outcome = results.length ? 'completed' : 'no_results'
+    }
+    debugLog('social.serpapi', 'Google search completed', { purpose: diagnostics?.purpose, resultCount: results.length })
+    return results
   } catch (error) {
-    if (!(error instanceof Error && error.name === 'AbortError')) debugError('social.serpapi', 'Google search failed', error)
+    const timedOut = error instanceof Error && error.name === 'AbortError'
+    if (diagnostics) diagnostics.outcome = timedOut ? 'timed_out' : 'provider_error'
+    if (!timedOut) debugError('social.serpapi', 'Google search failed', error, { purpose: diagnostics?.purpose })
     return []
   } finally {
     clearTimeout(timer)
@@ -263,15 +285,22 @@ async function searchGoogle(query: string, timeoutMs = 8_000): Promise<SearchRes
  * name/address evidence before it is marked verified and used for social links.
  */
 export async function discoverBrandAssets(name: string, address: string): Promise<BrandAssetDiscovery> {
-  const empty: BrandAssetDiscovery = { website: null, socials: {}, assets: [] }
+  const diagnostics: DiscoverySearchDiagnostic[] = [
+    { purpose: 'brand-local', outcome: 'not_started', resultCount: 0 },
+    { purpose: 'brand-official-website', outcome: 'not_started', resultCount: 0 },
+  ]
+  const empty: BrandAssetDiscovery = { website: null, socials: {}, assets: [], diagnostics }
   const brandWords = normalizedWords(name)
-  if (!process.env.SERPAPI_API_KEY || !name.trim() || !brandWords.length) return empty
+  if (!process.env.SERPAPI_API_KEY || !name.trim() || !brandWords.length) {
+    diagnostics.forEach((entry) => { entry.outcome = 'skipped' })
+    return empty
+  }
 
   try {
     const keyword = `${name} ${address}`.replace(/\s+/g, ' ').trim()
     const [localResults, brandResults] = await Promise.all([
-      searchGoogle(keyword, 8_000),
-      searchGoogle(`${name} official website`, 8_000),
+      searchGoogle(keyword, 8_000, diagnostics[0]),
+      searchGoogle(`${name} official website`, 8_000, diagnostics[1]),
     ])
     const items = [...localResults, ...brandResults]
     let bestUnverified: BrandAssetDiscovery | null = null
@@ -314,7 +343,7 @@ export async function discoverBrandAssets(name: string, address: string): Promis
           assets.push({ kind: 'social', platform, url: socialUrl, source: 'website', verification: 'verified_brand_asset', confidence: 'high', evidence: ['Linked from the verified official website'] })
         }
       }
-      const discovery = { website, socials, assets }
+      const discovery = { website, socials, assets, diagnostics }
       if (verified) {
         debugLog('social.brand-discover', 'Brand asset discovery completed', { name, verified, website: website.url, platforms: Object.keys(socials) })
         return discovery
@@ -336,8 +365,9 @@ export async function discoverVerifiedSocialsFromSearch(
   name: string,
   address: string,
   platforms: SocialPlatform[],
-): Promise<{ socials: DiscoveredSocials; assets: BrandAsset[] }> {
-  const empty = { socials: {} as DiscoveredSocials, assets: [] as BrandAsset[] }
+): Promise<{ socials: DiscoveredSocials; assets: BrandAsset[]; diagnostics: DiscoverySearchDiagnostic[] }> {
+  const diagnostics: DiscoverySearchDiagnostic[] = []
+  const empty = { socials: {} as DiscoveredSocials, assets: [] as BrandAsset[], diagnostics }
   const brandWords = normalizedWords(name)
   if (!process.env.SERPAPI_API_KEY || !name.trim() || !platforms.length || !brandWords.length) return empty
 
@@ -348,7 +378,10 @@ export async function discoverVerifiedSocialsFromSearch(
       }
       const localQuery = `site:${hostHint[platform]} \"${name}\" ${socialSearchLocality(address)}`.replace(/\s+/g, ' ').trim()
       const brandQuery = `site:${hostHint[platform]} \"${name}\"`.replace(/\s+/g, ' ').trim()
-      const [localResults, brandResults] = await Promise.all([searchGoogle(localQuery), searchGoogle(brandQuery)])
+      const localDiagnostic: DiscoverySearchDiagnostic = { purpose: `${platform}-local`, outcome: 'not_started', resultCount: 0 }
+      const brandDiagnostic: DiscoverySearchDiagnostic = { purpose: `${platform}-brand`, outcome: 'not_started', resultCount: 0 }
+      diagnostics.push(localDiagnostic, brandDiagnostic)
+      const [localResults, brandResults] = await Promise.all([searchGoogle(localQuery, 8_000, localDiagnostic), searchGoogle(brandQuery, 8_000, brandDiagnostic)])
       const items = [...localResults, ...brandResults]
       for (const item of items) {
         const match = classifyUrl(String(item?.url || ''))
@@ -377,7 +410,7 @@ export async function discoverVerifiedSocialsFromSearch(
     empty.socials[asset.platform] = asset.url
     empty.assets.push(asset)
   }
-  debugLog('social.brand-search', 'Verified platform search completed', { name, locality: socialSearchLocality(address), requestedPlatforms: platforms, foundPlatforms: Object.keys(empty.socials) })
+  debugLog('social.brand-search', 'Verified platform search completed', { name, locality: socialSearchLocality(address), requestedPlatforms: platforms, foundPlatforms: Object.keys(empty.socials), diagnostics })
   return empty
 }
 

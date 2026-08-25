@@ -120,7 +120,7 @@ Website-candidate discovery and platform-specific social searches are independen
 
 ### Diagnostic evidence
 
-The discovery response and server logs expose safe diagnostic metadata: whether SerpApi is configured, which discovery stages ran, candidate/result counts, verified platforms, and a reason category when no asset is returned. Credentials and raw provider secrets must never be included. This metadata is for browser Network inspection and Vercel logs; it must not be shown in the owner-facing report.
+The discovery response and server logs expose safe diagnostic metadata: whether SerpApi is configured, which discovery stages ran, provider-search outcome and result counts, candidate/rejection counts, verified platforms, and a reason category when no asset is returned. The response may identify a query's purpose (for example `brand-local` or `instagram-brand`) but must not expose credentials, raw provider payloads, or personal data. This metadata is for browser Network inspection and Vercel logs; it must not be shown in the owner-facing report.
 
 ## Data contract
 
