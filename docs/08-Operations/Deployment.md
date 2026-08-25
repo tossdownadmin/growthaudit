@@ -38,6 +38,10 @@ flowchart LR
 
 The app must not depend on fetching Google Fonts during `next build`. Typography uses a local system stack so a Vercel build remains reliable when external font hosts are unavailable.
 
+## pnpm supply-chain policy
+
+Vercel installs dependencies with pnpm. Approved install scripts are kept in the committed `pnpm-workspace.yaml` `allowBuilds` map. The project currently permits only `protobufjs@7.6.5`, a transitive Firebase dependency required by the installed dependency graph. Do not use a global “allow all builds” switch; review and add a package explicitly when pnpm reports a new ignored build.
+
 ## Release process
 
 1. Make changes on a feature branch.
