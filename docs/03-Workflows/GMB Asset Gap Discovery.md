@@ -114,6 +114,9 @@ If a verified website is found, fetch it and use first-party links, `sameAs` sch
 
 For each missing core platform, run a dedicated query rather than one broad multi-platform query. Use the city/locality rather than a Plus Code or full street address for social-profile queries, because official chain accounts rarely publish each individual branch address. This prevents a strong Instagram result from hiding an absent Facebook or TikTok result.
 
+> [!warning] Provider normalization
+> The discovery layer must normalize a provider's canonical organic-result URL into the internal `SearchResult.url` field before applying website or social verification. SerpApi supplies this field as `organic_results[].link`, not `organic_results[].url`. A missing normalization silently rejects every returned candidate even when the provider reports successful results.
+
 ### Runtime budget
 
 Website-candidate discovery and platform-specific social searches are independent and must run concurrently. Each external Google-result lookup has a short deadline so the confirmation step returns within the route’s 30-second Vercel budget. Do not run a broad fallback search after those lookups on the critical path; return verified evidence already obtained and let the audit continue.

@@ -228,7 +228,9 @@ function isLikelyOfficialProfile(brandWords: string[], match: { url: string }, r
   return brandWords.length > 1 || brandWords.some((word) => handle.includes(word))
 }
 
-type SearchResult = { url?: string; title?: string; snippet?: string; description?: string; displayed_link?: string; domain?: string }
+// SerpApi calls the canonical organic-result URL `link`. Normalize it at the
+// provider boundary so every downstream verifier can depend on `url`.
+type SearchResult = { url?: string; link?: string; title?: string; snippet?: string; description?: string; displayed_link?: string; domain?: string }
 
 /**
  * Search Google results through SerpApi. This intentionally stays server-only:
@@ -262,7 +264,9 @@ async function searchGoogle(query: string, timeoutMs = 8_000, diagnostics?: Disc
       debugError('social.serpapi', 'Google search returned a provider error', new Error('Provider returned an error response'), { purpose: diagnostics?.purpose })
       return []
     }
-    const results = Array.isArray(body?.organic_results) ? body.organic_results : []
+    const results: SearchResult[] = Array.isArray(body?.organic_results)
+      ? body.organic_results.map((result: SearchResult) => ({ ...result, url: result.url ?? result.link }))
+      : []
     if (diagnostics) {
       diagnostics.resultCount = results.length
       diagnostics.outcome = results.length ? 'completed' : 'no_results'
