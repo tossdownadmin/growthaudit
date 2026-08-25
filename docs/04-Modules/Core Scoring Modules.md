@@ -48,7 +48,7 @@ Social discovery, provider normalization, activity calculation, and section scor
 
 - recognizes Instagram, Facebook, TikTok, YouTube, X/Twitter, Threads, LinkedIn, Pinterest, Snapchat, and WhatsApp
 - rejects generic/share/login URLs and cleans tracking noise
-- optionally discovers missing core profiles through DataForSEO search
+- optionally discovers missing core profiles through SerpApi Google-result search
 - extracts canonical platform handles
 - calculates post cadence, recency, engagement, and confidence from heterogeneous payloads
 - calls SocialCrawl with retries/endpoint variants

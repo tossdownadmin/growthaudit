@@ -41,7 +41,7 @@ GoHighLevel lead adapter.
 ## Provider logic implemented elsewhere
 
 - Outscraper — `lib/reviewAudit.ts`
-- SocialCrawl and DataForSEO — `lib/social.ts`
+- SocialCrawl and SerpApi — `lib/social.ts`
 - PageSpeed and Browserless — `lib/audit.ts`
 - Google Places direct route adapters — `app/api/places/**`
 

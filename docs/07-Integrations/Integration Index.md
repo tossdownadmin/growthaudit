@@ -14,7 +14,7 @@ status: maintained
 | PageSpeed Insights | mobile/desktop technical evidence | No | website evidence continues |
 | Outscraper | recent Google reviews and owner responses | No | Google baseline/sample fallback |
 | SocialCrawl | social profile/post activity | No | profiles remain discovered; activity unknown |
-| DataForSEO | missing social profile discovery | No | website links only |
+| SerpApi | Google-result discovery of missing websites and social profiles | No | website links only |
 | Browserless | JavaScript/challenge HTML fallback | No | direct HTML result retained |
 | OpenAI | interpretation and competitor semantics | No | deterministic fallbacks |
 | Anthropic | alternative AI provider | No | deterministic fallbacks |

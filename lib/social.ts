@@ -215,6 +215,39 @@ function addressEvidence(address: string, pageText: string): boolean {
   return meaningful.length > 0 && meaningful.filter((word) => pageText.includes(word)).length >= Math.min(2, meaningful.length)
 }
 
+type SearchResult = { url?: string; title?: string; snippet?: string; description?: string; displayed_link?: string; domain?: string }
+
+/**
+ * Search Google results through SerpApi. This intentionally stays server-only:
+ * the API key is never exposed to the browser and callers receive only the
+ * small, provider-neutral result shape needed for brand verification.
+ */
+async function searchGoogle(query: string, timeoutMs = 12_000): Promise<SearchResult[]> {
+  const apiKey = process.env.SERPAPI_API_KEY
+  if (!apiKey || !query.trim()) return []
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const params = new URLSearchParams({ engine: 'google', q: query, api_key: apiKey, num: '10' })
+    const response = await fetch(`https://serpapi.com/search.json?${params}`, {
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+    if (!response.ok) {
+      debugError('social.serpapi', 'Google search request failed', new Error(`HTTP ${response.status}`))
+      return []
+    }
+    const body = await response.json().catch(() => null)
+    return Array.isArray(body?.organic_results) ? body.organic_results : []
+  } catch (error) {
+    if (!(error instanceof Error && error.name === 'AbortError')) debugError('social.serpapi', 'Google search failed', error)
+    return []
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /**
  * Finds a likely owned website only when Google Business Profile has none.
  * Search is merely a discovery source: the returned site needs independent
@@ -222,25 +255,12 @@ function addressEvidence(address: string, pageText: string): boolean {
  */
 export async function discoverBrandAssets(name: string, address: string): Promise<BrandAssetDiscovery> {
   const empty: BrandAssetDiscovery = { website: null, socials: {}, assets: [] }
-  const login = process.env.DATAFORSEO_LOGIN
-  const password = process.env.DATAFORSEO_PASSWORD
   const brandWords = normalizedWords(name)
-  if (!login || !password || !name.trim() || !brandWords.length) return empty
+  if (!process.env.SERPAPI_API_KEY || !name.trim() || !brandWords.length) return empty
 
-  const auth = Buffer.from(`${login}:${password}`).toString('base64')
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 25000)
   try {
     const keyword = `${name} ${address}`.replace(/\s+/g, ' ').trim()
-    const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
-      method: 'POST',
-      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword, location_code: 2840, language_code: 'en', depth: 10 }]),
-      signal: controller.signal,
-    })
-    if (!res.ok) return empty
-    const body = await res.json().catch(() => null)
-    const items = Array.isArray(body?.tasks?.[0]?.result?.[0]?.items) ? body.tasks[0].result[0].items : []
+    const items = await searchGoogle(keyword, 25_000)
 
     for (const item of items) {
       const url = candidateWebsiteUrl(item?.url)
@@ -283,8 +303,6 @@ export async function discoverBrandAssets(name: string, address: string): Promis
     }
   } catch (error) {
     debugError('social.brand-discover', 'Brand asset discovery failed', error, { name })
-  } finally {
-    clearTimeout(timer)
   }
   return empty
 }
@@ -300,29 +318,16 @@ export async function discoverVerifiedSocialsFromSearch(
   platforms: SocialPlatform[],
 ): Promise<{ socials: DiscoveredSocials; assets: BrandAsset[] }> {
   const empty = { socials: {} as DiscoveredSocials, assets: [] as BrandAsset[] }
-  const login = process.env.DATAFORSEO_LOGIN
-  const password = process.env.DATAFORSEO_PASSWORD
   const brandWords = normalizedWords(name)
-  if (!login || !password || !name.trim() || !platforms.length || !brandWords.length) return empty
+  if (!process.env.SERPAPI_API_KEY || !name.trim() || !platforms.length || !brandWords.length) return empty
 
-  const auth = Buffer.from(`${login}:${password}`).toString('base64')
   const searchOne = async (platform: SocialPlatform): Promise<BrandAsset | null> => {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 12000)
     try {
       const hostHint: Record<SocialPlatform, string> = {
         instagram: 'instagram.com', facebook: 'facebook.com', tiktok: 'tiktok.com', youtube: 'youtube.com', twitter: 'x.com OR twitter.com', threads: 'threads.net', linkedin: 'linkedin.com', pinterest: 'pinterest.com', snapchat: 'snapchat.com', whatsapp: 'wa.me',
       }
       const keyword = `site:${hostHint[platform]} \"${name}\" ${address}`.replace(/\s+/g, ' ').trim()
-      const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
-        method: 'POST',
-        headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ keyword, location_code: 2840, language_code: 'en', depth: 10 }]),
-        signal: controller.signal,
-      })
-      if (!res.ok) return null
-      const body = await res.json().catch(() => null)
-      const items = Array.isArray(body?.tasks?.[0]?.result?.[0]?.items) ? body.tasks[0].result[0].items : []
+      const items = await searchGoogle(keyword)
       for (const item of items) {
         const match = classifyUrl(String(item?.url || ''))
         if (!match || match.platform !== platform) continue
@@ -340,8 +345,6 @@ export async function discoverVerifiedSocialsFromSearch(
       }
     } catch (error) {
       debugError('social.brand-search', 'Platform social discovery failed', error, { platform, name })
-    } finally {
-      clearTimeout(timer)
     }
     return null
   }
@@ -356,32 +359,19 @@ export async function discoverVerifiedSocialsFromSearch(
 }
 
 /**
- * Discover a restaurant's social profiles from Google (via DataForSEO SERP) when
+ * Discover a restaurant's social profiles from Google results when
  * the website has none. Best-effort: any failure returns {} so the caller can
  * carry on. Results are only DISCOVERY suggestions — the user confirms/edits them.
  */
 export async function discoverSocialsFromGoogle(name: string, locationHint?: string): Promise<DiscoveredSocials> {
-  const login = process.env.DATAFORSEO_LOGIN
-  const password = process.env.DATAFORSEO_PASSWORD
   const found: DiscoveredSocials = {}
-  if (!login || !password || !name?.trim()) return found
+  if (!process.env.SERPAPI_API_KEY || !name?.trim()) return found
 
   const keyword = `${name} ${locationHint ?? ''} instagram facebook tiktok`.replace(/\s+/g, ' ').trim()
-  const auth = Buffer.from(`${login}:${password}`).toString('base64')
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 25000)
   try {
-    const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
-      method: 'POST',
-      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword, location_code: 2840, language_code: 'en', depth: 20 }]),
-      signal: controller.signal,
-    })
-    if (!res.ok) { debugError('social.google-discover', 'DataForSEO request failed', new Error(`HTTP ${res.status}`)); return found }
-    const body = await res.json().catch(() => null)
-    const items = body?.tasks?.[0]?.result?.[0]?.items
+    const items = await searchGoogle(keyword, 25_000)
     const urls: string[] = []
-    collectUrls(items ?? body?.tasks?.[0]?.result, urls)
+    collectUrls(items, urls)
     for (const raw of urls) {
       const match = classifyUrl(raw)
       if (match && !found[match.platform]) found[match.platform] = match.url
@@ -392,8 +382,6 @@ export async function discoverSocialsFromGoogle(name: string, locationHint?: str
     if (!(error instanceof Error && error.name === 'AbortError')) debugError('social.google-discover', 'Google social discovery threw', error)
     else debugError('social.google-discover', 'Google social discovery timed out', error)
     return found
-  } finally {
-    clearTimeout(timer)
   }
 }
 

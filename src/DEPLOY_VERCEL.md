@@ -17,8 +17,7 @@
 - `OPENAI_API_KEY`
 
 ### Required for full review response analysis
-- `DATAFORSEO_LOGIN`
-- `DATAFORSEO_PASSWORD`
+- `SERPAPI_API_KEY`
 
 ### Optional
 - `DIRECT_AUDIT_AI_MODEL=gpt-5.6`
@@ -58,7 +57,7 @@ After deployment:
    - website health appears
    - PageSpeed results appear
    - AI relationship intelligence appears
-7. If DataForSEO variables are configured:
+7. If `SERPAPI_API_KEY` is configured:
    - report initially shows review collection pending
    - full review response/sentiment data appears after polling
 

@@ -83,7 +83,7 @@ Use a weighted match from the candidate website and selected Google business:
 | exact or normalized restaurant name in site title, JSON-LD, or visible heading | high |
 | selected address/city/phone visibly matches site contact/location data | high |
 | website links to social profile whose handle/brand matches restaurant | supporting |
-| Google/DataForSEO result title and domain clearly name the restaurant | supporting |
+| Google-result title and domain clearly name the restaurant | supporting |
 | generic directory, delivery marketplace, review site, or social platform domain | automatic rejection as website |
 
 Require either two high-strength signals, or one high-strength plus two supporting signals. A candidate without enough evidence becomes `candidate_needs_confirmation`.

@@ -12,7 +12,7 @@ All third-party credentials remain server-side. Unless noted, errors are JSON ob
 |---|---|---|---|
 | GET | `/api/places/autocomplete?input=` | Restaurant suggestions | Google Places |
 | GET | `/api/places/details?placeId=` | Selected location evidence | Google Places |
-| GET | `/api/social/discover?url=&name=&address=` | Public profile discovery | Website, optional DataForSEO |
+| GET | `/api/social/discover?url=&name=&address=` | Public profile discovery | Website, optional SerpApi Google-result search |
 | GET | `/api/social/check` | Social diagnostics | Optional SocialCrawl |
 | POST | `/api/direct-audit` | Complete growth audit | Multiple, gracefully degraded |
 | GET | `/api/places/competitors` | V3 competitor discovery | Google, optional AI |

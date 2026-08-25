@@ -59,7 +59,7 @@ Marketplace fulfillment is treated differently from an owned or branded-direct r
 - Competitor analysis is contextual, not the core score.
 - The system does not run paid review, social, or PageSpeed calls on competitors.
 - AI interprets deterministic results but is not allowed to recalculate them.
-- Firebase, GoHighLevel, Browserless, DataForSEO, and AI are optional.
+- Firebase, GoHighLevel, Browserless, SerpApi, and AI are optional.
 - Google Places is necessary for the primary search and restaurant identity flow.
 
 ## Related notes

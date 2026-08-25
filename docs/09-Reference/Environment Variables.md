@@ -14,8 +14,7 @@ status: maintained
 | `GOOGLE_MAPS_API_KEY` | Alias only | `lib/google.ts` | Compatibility alias for competitor Google wrapper |
 | `OUTSCRAPER_API_KEY` | No | `lib/reviewAudit.ts` | recent reviews and owner responses |
 | `SOCIALCRAWL_API_KEY` | No | `lib/social.ts`, social diagnostics | social profile/post evidence |
-| `DATAFORSEO_LOGIN` | No | `lib/social.ts` | search fallback for social discovery |
-| `DATAFORSEO_PASSWORD` | No | `lib/social.ts` | DataForSEO basic authentication |
+| `SERPAPI_API_KEY` | No | `lib/social.ts` | Google-result discovery for a missing website and official social profiles |
 | `BROWSERLESS_TOKEN` | No | `lib/audit.ts` | website HTML fallback |
 
 ## AI
@@ -67,6 +66,7 @@ All three are required together to enable persistence:
 GOOGLE_PLACES_API_KEY=
 OUTSCRAPER_API_KEY=
 SOCIALCRAWL_API_KEY=
+SERPAPI_API_KEY=
 
 AI_PROVIDER=openai
 AI_API_KEY=
@@ -80,7 +80,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 ## Documentation drift
 
-`.env.example` does not currently list every compatibility/optional variable documented here. `src/DEPLOY_VERCEL.md` also describes an older DataForSEO-focused provider set. Runtime code and this catalogue are the more complete references.
+`.env.example` does not currently list every compatibility/optional variable documented here. Runtime code and this catalogue are the more complete references.
 
 ## Related notes
 
