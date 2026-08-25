@@ -8,7 +8,7 @@ status: maintained
 
 ## `app/layout.tsx`
 
-Root application shell. It loads Geist and Geist Mono through `next/font/google`, imports global CSS, declares product metadata, and provides the HTML/body wrapper.
+Root application shell. It uses a resilient local system-font stack rather than build-time Google Font downloads, imports global CSS, declares product metadata, and provides the HTML/body wrapper. This keeps Vercel builds independent of Google Fonts availability.
 
 ## `app/page.tsx`
 
@@ -62,11 +62,16 @@ Complete report presentation layer. It translates normalized audit output into:
 - technical website intelligence
 - reviews, sentiment, themes, and response behavior
 
-The component deliberately hides many provider plumbing failures from the owner-facing narrative while lower-level diagnostics remain in the returned audit object.
+The component deliberately hides many provider plumbing failures from the owner-facing narrative while lower-level diagnostics remain in the returned audit object. Its visual system uses a dark editorial hero, high-contrast score treatment, consistent rounded evidence cards, and a direct Tossdown handoff.
 
 ## `app/globals.css`
 
-Tailwind CSS 4 entry point and application theme. Defines the light palette, Tossdown pink, semantic success/warning/danger colors, typography, global sizing, selection colors, and audit progress animation.
+Tailwind CSS 4 entry point and application theme. Defines the light palette, Tossdown pink, semantic success/warning/danger colors, resilient typography, global sizing, selection colors, audit progress animation, and reusable premium-surface treatments.
+
+## Contact and handoff policy
+
+- The owner-facing call to action links to `https://tossdown.com`.
+- Any displayed Tossdown email address uses `info@tossdown.com`.
 
 ## Related notes
 

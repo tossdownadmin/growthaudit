@@ -34,6 +34,10 @@ flowchart LR
 > [!important]
 > The Vercel plan must support the declared function duration, otherwise platform limits may terminate long audits earlier.
 
+## Build reliability
+
+The app must not depend on fetching Google Fonts during `next build`. Typography uses a local system stack so a Vercel build remains reliable when external font hosts are unavailable.
+
 ## Release process
 
 1. Make changes on a feature branch.

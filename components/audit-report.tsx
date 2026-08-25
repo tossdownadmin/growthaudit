@@ -434,9 +434,9 @@ function GrowthEngineMap({audit}:{audit:any}){
     <div className="overflow-hidden rounded-3xl border border-border bg-card">
       {rows.map(row=>{const section=sections[row.key]??audit.result?.sections?.find((s:any)=>s.key===row.key);if(!section||section.status==='unknown'||typeof section.score!=='number')return null;const score=section.score;const color=growthScoreColor(score,section?.status);return <div key={row.key} className="grid gap-3 border-b border-border p-5 last:border-0 md:grid-cols-[1fr_100px] md:items-center"><div><div className="flex items-center gap-2 font-medium">{growthIcon(row.key)}{row.label}</div><p className="mt-1 text-sm text-muted-foreground">{row.sub}</p></div><div className="text-left md:text-right"><span className="text-2xl font-semibold" style={{color}}>{score}</span><span className="text-xs text-muted-foreground">/100</span></div></div>})}
     </div>
-    <div className="mt-5 flex flex-col items-start justify-between gap-4 rounded-3xl px-7 py-6 text-white md:flex-row md:items-center" style={{background:pink}}>
-      <div><p className="text-sm font-semibold">Close the leaks before buying more traffic.</p><p className="mt-1 text-sm text-white/80">tossdown connects the website, direct ordering, customer relationship, reputation and growth stack.</p></div>
-      <a href="https://www.tossdown.com/" target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black">Talk to tossdown <ArrowRight className="h-4 w-4"/></a>
+    <div className="mt-5 flex flex-col items-start justify-between gap-4 rounded-3xl px-7 py-6 text-white shadow-xl md:flex-row md:items-center" style={{background:'linear-gradient(115deg, #ed1f5b, #bf1648 58%, #6d1a66)'}}>
+      <div><p className="text-sm font-semibold">Close the leaks before buying more traffic.</p><p className="mt-1 text-sm text-white/80">tossdown connects the website, direct ordering, customer relationship, reputation and growth stack.</p><a href="mailto:info@tossdown.com" className="mt-2 inline-block text-xs font-medium text-white/80 underline-offset-4 hover:text-white hover:underline">info@tossdown.com</a></div>
+      <a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black shadow-lg hover:-translate-y-0.5">Talk to tossdown <ArrowRight className="h-4 w-4"/></a>
     </div>
   </section>
 }
@@ -445,17 +445,17 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
   const r=audit.result
   const i=audit.interpretation
   return <main className="min-h-screen">
-    <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-7"><div className="text-xl font-semibold tracking-[-0.04em]">tossdown<span style={{color:pink}}>.</span></div><button onClick={onReset} className="text-sm font-medium text-muted-foreground hover:text-foreground">New audit</button></header>
+    <header className="brand-header mx-auto flex max-w-6xl items-center justify-between px-6 py-7"><div className="text-xl font-semibold tracking-[-0.04em]">tossdown<span style={{color:pink}}>.</span></div><button onClick={onReset} className="rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:text-foreground">New audit</button></header>
     <section className="mx-auto max-w-6xl px-6 pb-24 pt-10">
-      <div className="flex flex-col justify-between gap-8 border-b border-border pb-10 md:flex-row md:items-end">
+      <div className="report-hero flex flex-col justify-between gap-8 p-7 md:flex-row md:items-end md:p-10">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{color:pink}}>Restaurant growth audit</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-6xl">{audit.restaurant.name}</h1>
-          <p className="mt-3 text-muted-foreground">{audit.restaurant.address}</p>
+          <p className="mt-3 flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" style={{color:pink}}/>{audit.restaurant.address}</p>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">How well your restaurant turns attention into direct orders, repeat customers, active relationships, and measurable growth.</p>
         </div>
         <div className="flex items-end gap-4">
-          <div><div className="text-7xl font-semibold leading-none tracking-[-0.08em]">{r.score}</div><div className="mt-2 text-sm text-muted-foreground">Growth Engine Score · out of 100</div></div>
+          <div className="rounded-3xl bg-foreground px-6 py-5 text-white shadow-2xl"><div className="text-7xl font-semibold leading-none tracking-[-0.08em]">{r.score}</div><div className="mt-2 text-sm text-white/65">Growth Engine Score · out of 100</div></div>
         </div>
       </div>
 
