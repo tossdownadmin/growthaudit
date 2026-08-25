@@ -50,8 +50,9 @@ function buildChecklist(audit:any):Array<{title:string;items:ChecklistItem[]}>{
   const NOT_A_WEBSITE=['facebook.com','fb.com','fb.me','m.facebook.com','instagram.com','instagr.am','tiktok.com','twitter.com','x.com','yelp.com','linktr.ee','linktree.com','beacons.ai','bio.link','allmylinks.com','msha.ke','tap.bio','carrd.co']
   const hostMatches=(h:string,domain:string)=>h===domain||h.endsWith('.'+domain)
   const isProperWebsite=(url:string)=>{const h=hostOf(url);return h?!NOT_A_WEBSITE.some(d=>hostMatches(h,d)):false}
-  const gmbUrl:string=audit.restaurant?.websiteUrl||''
+  const gmbUrl:string=audit.restaurant?.googleWebsiteUrl||''
   const gmbHost=hostOf(gmbUrl)
+  const independentlyVerifiedWebsite=(audit.restaurant?.brandAssets??[]).find((asset:any)=>asset.kind==='website'&&asset.verification==='verified_brand_asset_missing_from_gmb')
   const ownHost=isProperWebsite(gmbUrl)?gmbHost:hostOf(website.finalUrl||'')
   const profiles:any[]=social.profiles??[]
   const presentProfiles=profiles.filter((p:any)=>p.status&&p.status!=='unavailable')
@@ -133,7 +134,7 @@ function buildChecklist(audit:any):Array<{title:string;items:ChecklistItem[]}>{
       {label:'Link preview image (Open Graph)',state:meta.ogImage?'pass':htmlAvailable?'fail':'unknown',tip:'Add an Open Graph image so shared links present the brand professionally.'},
     ]},
     {title:'Profile consistency',items:[
-      {label:'Google profile links to your own website',state:gmbUrl?(isProperWebsite(gmbUrl)?'pass':'fail'):'fail',tip:gmbUrl?`Your Google Business Profile points to ${gmbHost||'a third-party link'} instead of your own website. Replace it with the restaurant website so customers land on a channel you control.`:'Add the restaurant website to Google Business Profile.'},
+      {label:'Google profile links to your own website',state:gmbUrl?(isProperWebsite(gmbUrl)?'pass':'fail'):'fail',tip:gmbUrl?`Your Google Business Profile points to ${gmbHost||'a third-party link'} instead of your own website. Replace it with the restaurant website so customers land on a channel you control.`:independentlyVerifiedWebsite?`We verified ${independentlyVerifiedWebsite.url} as the restaurant website, but it is missing from Google Business Profile. Add this exact website to Google so search customers reach your owned destination.`:'Add the restaurant website to Google Business Profile.'},
       {label:'Social bios route customers to your website',state:bioLinkState,tip:missingBioChannels.length?`Add your website link to ${missingBioChannels.join(', ')} so social attention can turn into direct visits and orders.`:'Point active social audiences toward your owned website or direct ordering path.'},
       {label:'Opening hours match Google & website',state:hoursState,tip:(gmbDays!=null&&siteHours)?`Google shows ${gmbDays} open day${gmbDays===1?'':'s'} while the website publishes ${siteHours.days}. Align them so customers see one source of truth.`:'Publish opening hours in structured website data so they can be verified against Google.'},
     ]},

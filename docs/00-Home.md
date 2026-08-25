@@ -22,6 +22,8 @@ This directory is an Obsidian-compatible knowledge base for the complete project
 - [[01-Project/Project Overview|Project Overview]] — product, audience, capabilities, and boundaries
 - [[02-Architecture/Architecture Overview|Architecture Overview]] — system shape, components, and execution model
 - [[03-Workflows/Audit Workflow|Audit Workflow]] — end-to-end user and audit lifecycle
+- [[03-Workflows/Review Theme Intelligence|Review Theme Intelligence]] — approved rules for meaningful review themes
+- [[03-Workflows/GMB Asset Gap Discovery|GMB Asset Gap Discovery]] — verified brand discovery and Google-profile gap rules
 - [[04-Modules/Module Index|Module Index]] — every application and library module
 - [[05-APIs/API Index|API Index]] — internal HTTP contracts
 - [[06-Data/Data Model|Data Model]] — request, evidence, result, and persistence structures

@@ -37,6 +37,10 @@ classDiagram
 
 Contains reachability, status/timing/size, HTML availability/source, URL/security signals, metadata, headings, schema, links, resources, performance signals, customer paths, direct-order paths, ordering classification, tracking technologies, opening hours, and PageSpeed runs.
 
+### Brand-asset discovery
+
+When the selected Google profile has no website, discovery may return separately sourced website and social assets. Each asset records its URL, source (`gmb`, official website, or search), verification state, confidence, and supporting evidence. A verified independent website is never copied into `googleWebsiteUrl`; this preserves the ability to report that it is missing from GMB. See [[03-Workflows/GMB Asset Gap Discovery|GMB Asset Gap Discovery]].
+
 ### Review audit
 
 Contains provider status/source, Google baseline, normalized sample, whether responses were measurable, metrics, deterministic topic map, error, and provider diagnostics. Metrics cover sentiment distribution, response coverage, negative response, and timing.

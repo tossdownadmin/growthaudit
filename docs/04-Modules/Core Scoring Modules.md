@@ -38,7 +38,7 @@ Normalizes Google review evidence and scores customer-response behavior.
 - `scoreReviewResponse` evaluates response coverage and timeliness
 - `scoreSentiment` evaluates recent customer sentiment
 
-The topic map is a deterministic fallback and does not require an AI key. It is only shown when an Outscraper corpus is large enough for the declared confidence level. AI may add owner-friendly interpretation but never replaces the measured topic map.
+The review-theme behavior is governed by [[03-Workflows/Review Theme Intelligence|Review Theme Intelligence]]. It requires canonical, restaurant-relevant themes rather than raw token frequency. AI may add owner-friendly interpretation but never replaces the measured topic map.
 
 Precise themes/percentages should not be inferred from the small Google Places sample.
 

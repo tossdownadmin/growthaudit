@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { fetchWebsiteHtml } from '@/lib/audit'
 import { debugError, debugLog } from '@/lib/debug'
 
 // ---------------------------------------------------------------------------
@@ -18,6 +19,28 @@ export type SocialPlatform =
   | 'whatsapp'
 
 export type DiscoveredSocials = Partial<Record<SocialPlatform, string>>
+
+export type BrandAssetVerification =
+  | 'linked_on_gmb'
+  | 'verified_brand_asset_missing_from_gmb'
+  | 'verified_brand_asset'
+  | 'candidate_needs_confirmation'
+
+export type BrandAsset = {
+  kind: 'website' | 'social'
+  platform?: SocialPlatform
+  url: string
+  source: 'gmb' | 'website' | 'search'
+  verification: BrandAssetVerification
+  confidence: 'limited' | 'medium' | 'high'
+  evidence: string[]
+}
+
+export type BrandAssetDiscovery = {
+  website: BrandAsset | null
+  socials: DiscoveredSocials
+  assets: BrandAsset[]
+}
 
 // Paths that indicate a share/intent widget rather than an owned profile.
 const SHARE_BLOCKLIST =
@@ -156,6 +179,114 @@ function collectUrls(node: any, out: string[], depth = 0): void {
   }
   if (Array.isArray(node)) { node.forEach((n) => collectUrls(n, out, depth + 1)); return }
   if (typeof node === 'object') for (const k of Object.keys(node)) collectUrls(node[k], out, depth + 1)
+}
+
+const NON_BRAND_WEBSITE_HOSTS = [
+  'google.com', 'googleusercontent.com', 'maps.google.com', 'facebook.com', 'instagram.com', 'tiktok.com', 'x.com', 'twitter.com',
+  'doordash.com', 'ubereats.com', 'grubhub.com', 'skiptheddishes.com', 'deliveroo.co.uk', 'foodpanda.com',
+  'yelp.com', 'tripadvisor.com', 'opentable.com', 'zomato.com', 'restaurantguru.com', 'foursquare.com', 'yellowpages.com', 'linktr.ee',
+]
+
+function normalizedWords(value: string): string[] {
+  return String(value || '').toLowerCase().match(/[a-z0-9]{3,}/g)?.filter((word) => !['restaurant', 'cafe', 'grill', 'the', 'and'].includes(word)) ?? []
+}
+
+function candidateWebsiteUrl(value: unknown): string | null {
+  try {
+    const url = new URL(String(value || ''))
+    if (!/^https?:$/.test(url.protocol)) return null
+    const host = url.hostname.replace(/^www\./, '').toLowerCase()
+    if (NON_BRAND_WEBSITE_HOSTS.some((domain) => host === domain || host.endsWith(`.${domain}`))) return null
+    if (classifyUrl(url.toString())) return null
+    return `${url.origin}${url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '')}`
+  } catch {
+    return null
+  }
+}
+
+function hasBrandMatch(brandWords: string[], value: string): boolean {
+  if (!brandWords.length) return false
+  const haystack = String(value || '').toLowerCase()
+  return brandWords.length === 1 ? haystack.includes(brandWords[0]) : brandWords.filter((word) => haystack.includes(word)).length >= Math.min(2, brandWords.length)
+}
+
+function addressEvidence(address: string, pageText: string): boolean {
+  const meaningful = normalizedWords(address).filter((word) => !/^\d+$/.test(word))
+  return meaningful.length > 0 && meaningful.filter((word) => pageText.includes(word)).length >= Math.min(2, meaningful.length)
+}
+
+/**
+ * Finds a likely owned website only when Google Business Profile has none.
+ * Search is merely a discovery source: the returned site needs independent
+ * name/address evidence before it is marked verified and used for social links.
+ */
+export async function discoverBrandAssets(name: string, address: string): Promise<BrandAssetDiscovery> {
+  const empty: BrandAssetDiscovery = { website: null, socials: {}, assets: [] }
+  const login = process.env.DATAFORSEO_LOGIN
+  const password = process.env.DATAFORSEO_PASSWORD
+  const brandWords = normalizedWords(name)
+  if (!login || !password || !name.trim() || !brandWords.length) return empty
+
+  const auth = Buffer.from(`${login}:${password}`).toString('base64')
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 25000)
+  try {
+    const keyword = `${name} ${address}`.replace(/\s+/g, ' ').trim()
+    const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
+      method: 'POST',
+      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ keyword, location_code: 2840, language_code: 'en', depth: 10 }]),
+      signal: controller.signal,
+    })
+    if (!res.ok) return empty
+    const body = await res.json().catch(() => null)
+    const items = Array.isArray(body?.tasks?.[0]?.result?.[0]?.items) ? body.tasks[0].result[0].items : []
+
+    for (const item of items) {
+      const url = candidateWebsiteUrl(item?.url)
+      if (!url) continue
+      const searchText = `${item?.title ?? ''} ${item?.description ?? ''} ${item?.domain ?? ''}`
+      const searchBrandMatch = hasBrandMatch(brandWords, searchText)
+      if (!searchBrandMatch) continue
+
+      const fetched = await fetchWebsiteHtml(url)
+      if (!fetched.html) continue
+      const $ = cheerio.load(fetched.html)
+      const title = $('title').first().text()
+      const headings = $('h1, h2').map((_, element) => $(element).text()).get().join(' ')
+      const pageText = $('body').text().replace(/\s+/g, ' ').toLowerCase()
+      const titleOrHeadingMatch = hasBrandMatch(brandWords, `${title} ${headings}`)
+      const locationMatch = addressEvidence(address, pageText)
+      const evidence: string[] = []
+      if (searchBrandMatch) evidence.push('Brand name matched in a location-specific search result')
+      if (titleOrHeadingMatch) evidence.push('Brand name matched the website title or heading')
+      if (locationMatch) evidence.push('Google profile location matched text on the website')
+      const verified = titleOrHeadingMatch && locationMatch
+      const confidence: BrandAsset['confidence'] = verified ? 'high' : titleOrHeadingMatch ? 'medium' : 'limited'
+      const website: BrandAsset = {
+        kind: 'website',
+        url: fetched.finalUrl || url,
+        source: 'search',
+        verification: verified ? 'verified_brand_asset_missing_from_gmb' : 'candidate_needs_confirmation',
+        confidence,
+        evidence,
+      }
+      const socials = verified ? extractSocialLinks(fetched.html, website.url) : {}
+      const assets: BrandAsset[] = [website]
+      if (verified) {
+        for (const [platform, socialUrl] of Object.entries(socials) as Array<[SocialPlatform, string]>) {
+          assets.push({ kind: 'social', platform, url: socialUrl, source: 'website', verification: 'verified_brand_asset', confidence: 'high', evidence: ['Linked from the verified official website'] })
+        }
+      }
+      debugLog('social.brand-discover', 'Brand asset discovery completed', { name, verified, website: website.url, platforms: Object.keys(socials) })
+      return { website, socials, assets }
+    }
+  } catch (error) {
+    debugError('social.brand-discover', 'Brand asset discovery failed', error, { name })
+  } finally {
+    clearTimeout(timer)
+  }
+  return empty
 }
 
 /**

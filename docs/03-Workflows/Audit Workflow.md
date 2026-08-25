@@ -55,9 +55,9 @@ sequenceDiagram
 
 The client waits 350 ms after typing and searches when the trimmed query has at least three characters. Selecting a suggestion requests Google fields for identity, coordinates, website, reputation, opening hours, price, category, and a small review sample.
 
-### 2. Social discovery
+### 2. Brand-asset and social discovery
 
-The website is fetched and parsed for recognized social URLs. Missing Instagram, Facebook, or TikTok profiles may be searched using DataForSEO when configured. Website-discovered links win over search fallbacks.
+The Google-linked website is fetched and parsed for recognized social URLs. When Google has no website, the application may search for a brand website using restaurant name and locality, verify ownership with multiple signals, then extract official social links from that verified site. Missing Instagram, Facebook, or TikTok profiles may be searched using DataForSEO when configured. Brand assets retain their discovery source and verification state so independently found assets are clearly marked as missing from GMB rather than silently treated as linked.
 
 ### 3. Lead lifecycle
 
