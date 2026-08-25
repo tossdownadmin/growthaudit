@@ -118,6 +118,10 @@ For each missing core platform, run a dedicated query rather than one broad mult
 
 Website-candidate discovery and platform-specific social searches are independent and must run concurrently. Each external Google-result lookup has a short deadline so the confirmation step returns within the route’s 30-second Vercel budget. Do not run a broad fallback search after those lookups on the critical path; return verified evidence already obtained and let the audit continue.
 
+### Diagnostic evidence
+
+The discovery response and server logs expose safe diagnostic metadata: whether SerpApi is configured, which discovery stages ran, candidate/result counts, verified platforms, and a reason category when no asset is returned. Credentials and raw provider secrets must never be included. This metadata is for browser Network inspection and Vercel logs; it must not be shown in the owner-facing report.
+
 ## Data contract
 
 The discovery endpoint should return a structured asset record rather than bare URLs:
