@@ -228,6 +228,7 @@ export async function POST(req: NextRequest) {
           googleReviewCount,
           metrics: null,
           sample: [],
+          topics: [],
           error: 'failed',
           diagnostics: {
             configured: hasOutscraper,
@@ -270,6 +271,7 @@ export async function POST(req: NextRequest) {
           googleRating: review.googleRating,
           googleReviewCount: review.googleReviewCount,
           metrics: review.metrics,
+          topics: review.topics,
           // Compact sample only — never one call per review. Truncate text to control tokens.
           sample: review.sample.slice(0, 50).map(r => ({ rating: r.rating, text: r.text.slice(0, 320), createdAt: r.createdAt, ownerResponded: r.ownerResponded, ownerResponse: r.ownerResponse ? r.ownerResponse.slice(0, 320) : null })),
         }
@@ -361,7 +363,8 @@ export async function POST(req: NextRequest) {
         googleRating: review.googleRating,
         googleReviewCount: review.googleReviewCount,
         metrics: review.metrics,
-        // A few high-signal, truncated examples for the UI — never the full 50-review dump.
+        topics: review.topics,
+        // A few high-signal, truncated examples for the UI — never the full review corpus.
         examples: review.sample.slice(0, 3).map(r => ({ rating: r.rating, text: r.text.slice(0, 240), createdAt: r.createdAt, ownerResponded: r.ownerResponded })),
       },
       benchmark,

@@ -654,6 +654,8 @@ function ReviewsPanel({reviews,interpretation}:{reviews:any;interpretation:any})
   const responseKnown=Boolean(reviews.responseMeasured&&deepSample&&m&&m.overallResponseRate!==null)
   const hasSentiment=Boolean(deepSample&&m&&m.positiveRate!==null)
   const signal=interpretation?.reviewRelationshipSummary
+  const topics=Array.isArray(reviews.topics)?reviews.topics:[]
+  const hasTopicMap=reviews.source==='outscraper'&&sampleSize>=5&&topics.length>0
 
   return <section className="mb-10">
     <div className="mb-5">
@@ -742,6 +744,19 @@ function ReviewsPanel({reviews,interpretation}:{reviews:any;interpretation:any})
           })}
         </div>
       </div>}
+
+    {hasTopicMap&&<div className="mt-6 rounded-2xl border border-border bg-card p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2"><p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Customer word &amp; topic map</p><span className="text-xs text-muted-foreground">{sampleSize} recent reviews · {topics[0]?.confidence||'limited'} confidence</span></div>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Repeated public language grouped without AI. Product topics show what guests mention; service and experience topics show how the visit feels.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {topics.slice(0,8).map((topic:any,index:number)=>{
+          const sentiment=String(topic?.sentiment||'mixed').toLowerCase()
+          const dot=sentiment==='positive'?'#0f9d58':sentiment==='negative'?pink:'#f4a400'
+          const category=String(topic?.category||'other')
+          return <div key={`${index}-${topic?.topic||''}`} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{background:dot}}/><span className="font-medium">{topic?.topic||'Topic'}</span><span className="rounded-full bg-muted px-2 py-0.5 text-[11px] capitalize text-muted-foreground">{category}</span><span className="text-xs text-muted-foreground">· {topic?.mentions||0} mentions</span></div>{Array.isArray(topic?.examples)&&topic.examples[0]&&<p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">“{topic.examples[0]}”</p>}</div>
+        })}
+      </div>
+    </div>}
   </section>
 }
 function Metric({icon,label,value,detail}:{icon:React.ReactNode;label:string;value:string;detail:string}){return <div className="rounded-2xl border border-border bg-card p-6"><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{icon}{label}</div><div className="mt-4 text-3xl font-semibold tracking-[-0.05em]">{value}</div><p className="mt-2 text-sm leading-6 text-muted-foreground">{detail}</p></div>}

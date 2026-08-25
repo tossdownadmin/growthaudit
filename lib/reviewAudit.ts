@@ -37,6 +37,23 @@ export type ReviewMetrics = {
   recentReviewCount90d: number
 }
 
+export type ReviewTopicCategory = 'product' | 'service' | 'experience' | 'other'
+export type ReviewTopicSentiment = 'positive' | 'negative' | 'neutral' | 'mixed'
+export type ReviewTopicConfidence = 'limited' | 'medium' | 'high'
+
+/** A repeated, rating-backed public signal. This is deterministic and never depends on an AI provider. */
+export type ReviewTopic = {
+  topic: string
+  category: ReviewTopicCategory
+  sentiment: ReviewTopicSentiment
+  mentions: number
+  positiveMentions: number
+  negativeMentions: number
+  neutralMentions: number
+  confidence: ReviewTopicConfidence
+  examples: string[]
+}
+
 export type ReviewAuditDiagnostics = {
   configured: boolean
   providerState:
@@ -65,6 +82,7 @@ export type ReviewAuditResult = {
   googleReviewCount: number | null
   metrics: ReviewMetrics | null
   sample: NormalizedGoogleReview[]
+  topics: ReviewTopic[]
   error: string | null
   diagnostics: ReviewAuditDiagnostics
 }
@@ -76,13 +94,13 @@ const OUTSCRAPER_ENDPOINT = 'https://api.outscraper.com/google-maps-reviews'
 // review sample; if Outscraper returns a pending job we poll briefly and retry
 // once at lower depth before degrading to the Google reputation baseline.
 const OUTSCRAPER_TIMEOUT_MS = 20000
-// Keep the full review layer interactive. A smaller recent sample is enough for
-// response/sentiment diagnostics and is materially more reliable synchronously.
 const OUTSCRAPER_POLL_BUDGET_MS = 16000
 const OUTSCRAPER_POLL_INTERVAL_MS = 2500
-const PRIMARY_REVIEW_LIMIT = 30
-const RETRY_REVIEW_LIMIT = 20
-const MAX_REVIEWS = PRIMARY_REVIEW_LIMIT
+// Keep the review layer interactive while retaining enough repeated language
+// for a useful product/service topic map. The retry stays smaller so a slow
+// provider can still return a responsive audit instead of blocking all results.
+const PRIMARY_REVIEW_LIMIT = 60
+const RETRY_REVIEW_LIMIT = 30
 
 // Pull the place record (and its reviews) out of any Outscraper response shape.
 // Sync responses are `[place]` or `{ data: [place] }`; async/polled results are
@@ -246,6 +264,93 @@ export function computeReviewMetrics(reviews: NormalizedGoogleReview[], response
   }
 }
 
+const TOPIC_STOP_WORDS = new Set([
+  'about', 'after', 'again', 'also', 'always', 'amazing', 'and', 'are', 'around', 'back', 'been', 'best', 'better', 'but', 'came', 'come', 'could', 'definitely', 'delicious', 'did', 'does', 'first', 'for', 'from', 'get', 'good', 'great', 'had', 'has', 'have', 'here', 'highly', 'just', 'like', 'love', 'loved', 'more', 'most', 'much', 'nice', 'not', 'our', 'place', 'really', 'restaurant', 'return', 'that', 'the', 'their', 'them', 'this', 'very', 'was', 'were', 'will', 'with', 'would', 'you', 'your',
+])
+const SERVICE_TERMS = new Set(['service', 'server', 'servers', 'waiter', 'waitress', 'wait', 'waiting', 'staff', 'manager', 'friendly', 'rude', 'host', 'cashier', 'customer'])
+const EXPERIENCE_TERMS = new Set(['atmosphere', 'ambiance', 'ambience', 'music', 'clean', 'cleanliness', 'parking', 'location', 'crowded', 'noise', 'noisy', 'seating', 'decor'])
+const GENERIC_PRODUCT_TERMS = new Set(['food', 'menu', 'dish', 'meal', 'portion', 'taste', 'flavor', 'flavour', 'quality', 'fresh', 'price', 'prices', 'value'])
+
+type TopicAccumulator = {
+  phrase: string
+  category: ReviewTopicCategory
+  ratings: number[]
+  examples: string[]
+}
+
+function topicWords(text: string): string[] {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s'-]/g, ' ')
+    .split(/\s+/)
+    .map((word) => word.replace(/^'+|'+$/g, ''))
+    .filter((word) => word.length >= 3 && !TOPIC_STOP_WORDS.has(word) && !/^\d+$/.test(word))
+}
+
+function topicCategory(words: string[]): ReviewTopicCategory {
+  if (words.some((word) => SERVICE_TERMS.has(word))) return 'service'
+  if (words.some((word) => EXPERIENCE_TERMS.has(word))) return 'experience'
+  return 'product'
+}
+
+function titleTopic(value: string): string {
+  return value.replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+/**
+ * Builds an honest public word/topic map without an LLM. Topics must repeat in
+ * at least two distinct reviews, and callers should only publish it from a
+ * sufficiently large Outscraper corpus. Review rating is the stable sentiment
+ * anchor instead of guessing sentiment from isolated adjectives.
+ */
+export function buildReviewTopicMap(reviews: NormalizedGoogleReview[]): ReviewTopic[] {
+  if (reviews.length < 5) return []
+
+  const phrases = new Map<string, TopicAccumulator>()
+  for (const review of reviews) {
+    const words = topicWords(review.text)
+    if (!words.length) continue
+    const candidates = new Set<string>()
+
+    for (const word of words) {
+      if (!GENERIC_PRODUCT_TERMS.has(word) && !SERVICE_TERMS.has(word) && !EXPERIENCE_TERMS.has(word)) candidates.add(word)
+    }
+    for (let index = 0; index < words.length - 1; index += 1) {
+      const pair = [words[index], words[index + 1]]
+      if (pair.every((word) => GENERIC_PRODUCT_TERMS.has(word))) continue
+      if (pair.some((word) => SERVICE_TERMS.has(word) || EXPERIENCE_TERMS.has(word)) || pair.some((word) => !GENERIC_PRODUCT_TERMS.has(word))) candidates.add(pair.join(' '))
+    }
+
+    for (const phrase of candidates) {
+      const category = topicCategory(phrase.split(' '))
+      const current = phrases.get(phrase) ?? { phrase, category, ratings: [], examples: [] }
+      if (typeof review.rating === 'number') current.ratings.push(review.rating)
+      if (review.text && current.examples.length < 2) current.examples.push(review.text.slice(0, 180))
+      phrases.set(phrase, current)
+    }
+  }
+
+  const confidence: ReviewTopicConfidence = reviews.length >= 20 ? 'high' : reviews.length >= 10 ? 'medium' : 'limited'
+  return [...phrases.values()]
+    .filter((entry) => entry.ratings.length >= 2)
+    .map((entry) => {
+      const positiveMentions = entry.ratings.filter((rating) => rating >= 4).length
+      const negativeMentions = entry.ratings.filter((rating) => rating <= 2).length
+      const neutralMentions = entry.ratings.filter((rating) => rating === 3).length
+      const mentions = entry.ratings.length
+      const sentiment: ReviewTopicSentiment = positiveMentions / mentions >= 0.7
+        ? 'positive'
+        : negativeMentions / mentions >= 0.5
+          ? 'negative'
+          : neutralMentions / mentions >= 0.6
+            ? 'neutral'
+            : 'mixed'
+      return { topic: titleTopic(entry.phrase), category: entry.category, sentiment, mentions, positiveMentions, negativeMentions, neutralMentions, confidence, examples: entry.examples }
+    })
+    .sort((a, b) => b.mentions - a.mentions || b.negativeMentions - a.negativeMentions || a.topic.localeCompare(b.topic))
+    .slice(0, 12)
+}
+
 /**
  * Fetch recent reviews from Outscraper for a Google Place ID, newest-first.
  * One low-depth retry is allowed only when the provider is slow/empty; auth,
@@ -286,6 +391,7 @@ export async function auditGoogleReviews(
         googleReviewCount,
         metrics: computeReviewMetrics(sample, false),
         sample,
+        topics: [],
         error,
         diagnostics,
       }
@@ -299,6 +405,7 @@ export async function auditGoogleReviews(
       googleReviewCount,
       metrics: null,
       sample: [],
+      topics: [],
       error,
       diagnostics,
     }
@@ -444,6 +551,7 @@ export async function auditGoogleReviews(
 
   const sample = attempt.rawReviews.slice(0, PRIMARY_REVIEW_LIMIT).map(normalizeOutscraperReview)
   const metrics = computeReviewMetrics(sample, true)
+  const topics = buildReviewTopicMap(sample)
 
   debugLog('reviews.outscraper', 'Outscraper reviews retrieved', {
     received: sample.length,
@@ -453,6 +561,7 @@ export async function auditGoogleReviews(
     overallResponseRate: metrics.overallResponseRate,
     negativeResponseRate: metrics.negativeResponseRate,
     medianResponseTimeHours: metrics.medianResponseTimeHours,
+    topics: topics.length,
   })
 
   return {
@@ -463,6 +572,7 @@ export async function auditGoogleReviews(
     googleReviewCount: googleReviewCount ?? providerCount,
     metrics,
     sample,
+    topics,
     error: null,
     diagnostics: {
       configured: true,
