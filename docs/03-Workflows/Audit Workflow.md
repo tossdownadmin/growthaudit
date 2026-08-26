@@ -71,11 +71,6 @@ The server fetches up to 1.5 MB of HTML, records reachability and response evide
 
 Some restaurant ordering sites open with a delivery/pickup mode and city, region, or branch selector. This is evidence that ordering exists, but the public scanner cannot responsibly infer checkout ownership, customer capture, or the full conversion path without choosing a location. Classify this as `location_required`, describe it as **ordering available — location selection required**, and exclude it from both positive and negative ordering scores. Never label it “No online ordering detected.” Browserless is an optional fallback.
 
-### Local search visibility
-
-The owner report does not show competitor names, rankings, or substitution lists. When `SERPAPI_API_KEY` is configured, it runs exactly five location-aware Google queries selected from the restaurant's Google category, website/menu language, review topics, and locality. For each query, it reports the restaurant's observed organic position and, when the same Google response includes the restaurant in local results, its observed local-result position. These are tracked local-search queries, not a claim to represent all keywords the restaurant ranks for.
-
-Use one standard Google SERP request per tracked query—not separate Organic and Maps calls—so the fixed Top 5 tracker costs five SerpApi credits per audit. If a result is absent, render `Not observed` rather than an invented position. No visibility query is run without a configured key, and there is no deeper-scan control in the owner report.
 
 ### 5. Concurrent evidence phases
 

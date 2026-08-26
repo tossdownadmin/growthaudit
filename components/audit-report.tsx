@@ -366,20 +366,6 @@ function CompetitorBenchmarkPanel({audit}:{audit:any}){
   </section>
 }
 
-function LocalSearchVisibility({insight}:{insight:any}){
-  if(!insight||insight.status==='unavailable'||!insight.keywords?.length)return null
-  return <section className="mb-10">
-    <div className="mb-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{color:pink}}>Local search visibility</p>
-      <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">Your Top 5 tracked local searches</h2>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">Observed from one location-aware Google check per query. A blank position means your confirmed website or Google Business Profile was not observed in that result set.</p>
-    </div>
-    <div className="rounded-3xl border border-border bg-card p-7">
-      <div className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-border pb-3 text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground"><span>Tracked query</span><span>Organic</span><span>Google local</span></div>
-      {insight.keywords.map((row:any,index:number)=><div key={row.query} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-border py-4 last:border-0"><div className="min-w-0"><span className="mr-3 inline-flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">{index+1}</span><span className="text-sm font-medium">{row.query}</span></div><span className="text-sm font-semibold">{row.organicPosition!=null?`#${row.organicPosition}`:'—'}</span><span className="text-sm font-semibold">{row.localPosition!=null?`#${row.localPosition}`:'—'}</span></div>)}
-    </div>
-  </section>
-}
 function priorityText(p:any){
   if(typeof p==='string')return p
   return p?.title||p?.action||p?.whyItMatters||p?.summary||''
@@ -450,7 +436,6 @@ function GrowthEngineMap({audit}:{audit:any}){
 function OwnerReportMap(){
   const stops=[
     {href:'#engine',label:'Growth engine',detail:'Where demand leaks',icon:<Gauge className="h-4 w-4"/>},
-    {href:'#market',label:'Local search',detail:'How Google describes you',icon:<MapPin className="h-4 w-4"/>},
     {href:'#voice',label:'Customer voice',detail:'What guests repeat',icon:<MessageSquare className="h-4 w-4"/>},
     {href:'#evidence',label:'Technical proof',detail:'What supports the score',icon:<FileSearch className="h-4 w-4"/>},
   ]
@@ -476,7 +461,6 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
       </div>
       <OwnerReportMap/>
       <div id="engine"><GrowthPillars result={r}/><GrowthLeaks interpretation={i}/><WebsiteOrderingGrowth audit={audit}/></div>
-      <div id="market"><LocalSearchVisibility insight={audit.localSearch}/></div>
       <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><SocialActivity social={audit.social}/></div>
       <GrowthEngineMap audit={audit}/>
 
