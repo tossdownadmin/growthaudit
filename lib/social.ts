@@ -233,12 +233,8 @@ function isLikelyOfficialProfile(brandWords: string[], match: { url: string }, r
 type SearchResult = { url?: string; link?: string; title?: string; snippet?: string; description?: string; displayed_link?: string; domain?: string; position?: number }
 
 export type LocalSearchVisibility = {
-  status: 'observed' | 'not_observed' | 'unavailable'
-  queryLabel: string
-  position: number | null
-  title: string | null
-  snippet: string | null
-  themes: string[]
+  status: 'available' | 'unavailable'
+  keywords: Array<{ query: string; organicPosition: number | null; localPosition: number | null }>
 }
 
 /**
@@ -307,23 +303,48 @@ function resultThemes(result: SearchResult, name: string, address: string): stri
   return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 4).map(([word]) => word)
 }
 
-/** One bounded, brand-specific Google query for the owner report. It reports
- * observed result language, never an inferred keyword ranking. */
-export async function inspectLocalSearchVisibility(name: string, address: string, websiteUrl: string): Promise<LocalSearchVisibility> {
-  const locality = socialSearchLocality(address)
-  const queryLabel = locality ? `${name} · ${locality}` : name
-  const unavailable: LocalSearchVisibility = { status: 'unavailable', queryLabel, position: null, title: null, snippet: null, themes: [] }
-  if (!process.env.SERPAPI_API_KEY || !name.trim() || !websiteUrl.trim()) return unavailable
+function keywordCategory(input: any): string {
+  const raw = String(input?.primaryType || input?.types?.[0] || 'restaurant').replace(/_/g, ' ').toLowerCase()
+  return raw.replace(/\b(food|point|establishment)\b/g, '').replace(/\s+/g, ' ').trim() || 'restaurant'
+}
+
+function normalizeBusinessName(value: unknown) { return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() }
+
+async function searchLocalKeyword(query: string, location: string, ownedHost: string, name: string): Promise<{ organicPosition: number | null; localPosition: number | null }> {
+  const apiKey = process.env.SERPAPI_API_KEY
+  if (!apiKey) return { organicPosition: null, localPosition: null }
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8_000)
   try {
-    const results = await searchGoogle(`"${name}" ${locality}`.trim(), 8_000, { purpose: 'local-search-visibility', outcome: 'not_started', resultCount: 0 })
-    const ownedHost = new URL(websiteUrl).hostname
-    const match = results.find((result) => {
-      try { return Boolean(result.url) && hostMatches(new URL(result.url!).hostname, ownedHost) } catch { return false }
-    })
-    if (!match) return { ...unavailable, status: 'not_observed' }
-    return { status: 'observed', queryLabel, position: typeof match.position === 'number' ? match.position : null, title: match.title ?? null, snippet: match.snippet ?? match.description ?? null, themes: resultThemes(match, name, address) }
+    const params = new URLSearchParams({ engine: 'google', q: query, api_key: apiKey, num: '10', location })
+    const response = await fetch(`https://serpapi.com/search.json?${params}`, { signal: controller.signal, cache: 'no-store' })
+    const body = response.ok ? await response.json().catch(() => null) : null
+    const organic: SearchResult[] = Array.isArray(body?.organic_results) ? body.organic_results.map((row: SearchResult) => ({ ...row, url: row.url ?? row.link })) : []
+    const organicMatch = organic.find((row) => { try { return Boolean(row.url) && hostMatches(new URL(row.url!).hostname, ownedHost) } catch { return false } })
+    const localRows: any[] = Array.isArray(body?.local_results) ? body.local_results : Array.isArray(body?.local_results?.places) ? body.local_results.places : []
+    const normalizedName = normalizeBusinessName(name)
+    const localMatch = localRows.find((row) => normalizeBusinessName(row?.title) === normalizedName)
+    return { organicPosition: typeof organicMatch?.position === 'number' ? organicMatch.position : null, localPosition: typeof localMatch?.position === 'number' ? localMatch.position : null }
   } catch (error) {
-    debugError('social.local-search', 'Local search visibility inspection failed', error, { name })
+    debugError('social.local-search', 'Tracked keyword search failed', error, { query })
+    return { organicPosition: null, localPosition: null }
+  } finally { clearTimeout(timer) }
+}
+
+/** Fixed five-query tracker. Each standard Google SERP can contain both organic
+ * and local-result evidence, keeping the free-tier cost to five credits. */
+export async function inspectLocalSearchVisibility(input: any): Promise<LocalSearchVisibility> {
+  const unavailable: LocalSearchVisibility = { status: 'unavailable', keywords: [] }
+  if (!process.env.SERPAPI_API_KEY || !input?.name || !input?.websiteUrl) return unavailable
+  try {
+    const locality = socialSearchLocality(input.address || '')
+    const category = keywordCategory(input)
+    const keywords = [...new Set([`${input.name} ${locality}`, `${category} ${locality}`, `${category} near me`, `${category} delivery ${locality}`, `${category} menu ${locality}`].map((query) => query.replace(/\s+/g, ' ').trim()))].slice(0, 5)
+    const ownedHost = new URL(input.websiteUrl).hostname
+    const rows = await Promise.all(keywords.map(async (query) => ({ query, ...(await searchLocalKeyword(query, input.address || locality, ownedHost, input.name)) })))
+    return { status: 'available', keywords: rows }
+  } catch (error) {
+    debugError('social.local-search', 'Keyword visibility inspection failed', error, { name: input?.name })
     return unavailable
   }
 }

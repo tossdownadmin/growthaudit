@@ -73,7 +73,9 @@ Some restaurant ordering sites open with a delivery/pickup mode and city, region
 
 ### Local search visibility
 
-The owner report does not show competitor names, rankings, or substitution lists. When `SERPAPI_API_KEY` is configured, it may run exactly one Google query for the selected restaurant name plus locality and show a compact local-search-visibility insight: whether the restaurant's owned website appears, its observed organic position, and themes extracted from that result's title and snippet. These are result-language themes, not claimed keyword rankings. If the business's owned site is not observed, the panel says so rather than inventing a visibility conclusion. One query consumes one SerpApi search credit; no visibility query is run without a configured key.
+The owner report does not show competitor names, rankings, or substitution lists. When `SERPAPI_API_KEY` is configured, it runs exactly five location-aware Google queries selected from the restaurant's Google category, website/menu language, review topics, and locality. For each query, it reports the restaurant's observed organic position and, when the same Google response includes the restaurant in local results, its observed local-result position. These are tracked local-search queries, not a claim to represent all keywords the restaurant ranks for.
+
+Use one standard Google SERP request per tracked query—not separate Organic and Maps calls—so the fixed Top 5 tracker costs five SerpApi credits per audit. If a result is absent, render `Not observed` rather than an invented position. No visibility query is run without a configured key, and there is no deeper-scan control in the owner report.
 
 ### 5. Concurrent evidence phases
 

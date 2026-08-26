@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
 
     // One brand-specific query only. This replaces owner-facing competitor
     // lists with evidence about the restaurant's own search-result language.
-    const localSearchPhase = inspectLocalSearchVisibility(input.name, input.address, input.websiteUrl)
+    const localSearchPhase = inspectLocalSearchVisibility(input)
 
     const [, social, review, benchmark, localSearch] = await Promise.all([pageSpeedPhase, socialPhase, reviewPhase, benchmarkPhase, localSearchPhase])
 

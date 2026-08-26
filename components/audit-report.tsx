@@ -367,16 +367,16 @@ function CompetitorBenchmarkPanel({audit}:{audit:any}){
 }
 
 function LocalSearchVisibility({insight}:{insight:any}){
-  if(!insight||insight.status==='unavailable')return null
-  const observed=insight.status==='observed'
+  if(!insight||insight.status==='unavailable'||!insight.keywords?.length)return null
   return <section className="mb-10">
     <div className="mb-5">
       <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{color:pink}}>Local search visibility</p>
-      <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">How Google describes your restaurant locally</h2>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">One brand-and-locality Google result check. These are observed result-language themes, not a generic keyword-ranking claim.</p>
+      <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">Your Top 5 tracked local searches</h2>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">Observed from one location-aware Google check per query. A blank position means your confirmed website or Google Business Profile was not observed in that result set.</p>
     </div>
     <div className="rounded-3xl border border-border bg-card p-7">
-      {observed?<><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Observed query</p><p className="mt-2 text-lg font-semibold">{insight.queryLabel}</p></div>{insight.position!=null&&<span className="rounded-full bg-success/10 px-3 py-1.5 text-xs font-semibold text-success">Organic result #{insight.position}</span>}</div>{insight.title&&<p className="mt-6 font-medium">{insight.title}</p>}{insight.snippet&&<p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{insight.snippet}</p>}{insight.themes?.length>0&&<div className="mt-6"><p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Result-language themes</p><div className="mt-3 flex flex-wrap gap-2">{insight.themes.map((theme:string)=><span key={theme} className="rounded-full bg-muted px-3 py-1.5 text-sm">{theme}</span>)}</div></div>}</>:<><p className="text-lg font-semibold">Your owned website was not observed for this local brand search.</p><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">That does not prove you do not rank; it means this single evidence check did not surface the confirmed website. We do not infer keyword themes from that absence.</p></>}
+      <div className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-border pb-3 text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground"><span>Tracked query</span><span>Organic</span><span>Google local</span></div>
+      {insight.keywords.map((row:any,index:number)=><div key={row.query} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-border py-4 last:border-0"><div className="min-w-0"><span className="mr-3 inline-flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">{index+1}</span><span className="text-sm font-medium">{row.query}</span></div><span className="text-sm font-semibold">{row.organicPosition!=null?`#${row.organicPosition}`:'—'}</span><span className="text-sm font-semibold">{row.localPosition!=null?`#${row.localPosition}`:'—'}</span></div>)}
     </div>
   </section>
 }
