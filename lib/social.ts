@@ -230,7 +230,16 @@ function isLikelyOfficialProfile(brandWords: string[], match: { url: string }, r
 
 // SerpApi calls the canonical organic-result URL `link`. Normalize it at the
 // provider boundary so every downstream verifier can depend on `url`.
-type SearchResult = { url?: string; link?: string; title?: string; snippet?: string; description?: string; displayed_link?: string; domain?: string }
+type SearchResult = { url?: string; link?: string; title?: string; snippet?: string; description?: string; displayed_link?: string; domain?: string; position?: number }
+
+export type LocalSearchVisibility = {
+  status: 'observed' | 'not_observed' | 'unavailable'
+  queryLabel: string
+  position: number | null
+  title: string | null
+  snippet: string | null
+  themes: string[]
+}
 
 /**
  * Search Google results through SerpApi. This intentionally stays server-only:
@@ -280,6 +289,42 @@ async function searchGoogle(query: string, timeoutMs = 8_000, diagnostics?: Disc
     return []
   } finally {
     clearTimeout(timer)
+  }
+}
+
+function hostMatches(a: string, b: string) {
+  const normalize = (host: string) => host.replace(/^www\./i, '').toLowerCase()
+  return normalize(a) === normalize(b)
+}
+
+function resultThemes(result: SearchResult, name: string, address: string): string[] {
+  const ignored = new Set([...normalizedWords(name), ...normalizedWords(address), 'official', 'restaurant', 'restaurants', 'order', 'online', 'best', 'home', 'menu', 'with', 'from', 'your', 'this', 'that', 'and', 'the', 'for', 'are', 'our'])
+  const counts = new Map<string, number>()
+  for (const word of normalizedWords(`${result.title ?? ''} ${result.snippet ?? result.description ?? ''}`)) {
+    if (ignored.has(word)) continue
+    counts.set(word, (counts.get(word) ?? 0) + 1)
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 4).map(([word]) => word)
+}
+
+/** One bounded, brand-specific Google query for the owner report. It reports
+ * observed result language, never an inferred keyword ranking. */
+export async function inspectLocalSearchVisibility(name: string, address: string, websiteUrl: string): Promise<LocalSearchVisibility> {
+  const locality = socialSearchLocality(address)
+  const queryLabel = locality ? `${name} · ${locality}` : name
+  const unavailable: LocalSearchVisibility = { status: 'unavailable', queryLabel, position: null, title: null, snippet: null, themes: [] }
+  if (!process.env.SERPAPI_API_KEY || !name.trim() || !websiteUrl.trim()) return unavailable
+  try {
+    const results = await searchGoogle(`"${name}" ${locality}`.trim(), 8_000, { purpose: 'local-search-visibility', outcome: 'not_started', resultCount: 0 })
+    const ownedHost = new URL(websiteUrl).hostname
+    const match = results.find((result) => {
+      try { return Boolean(result.url) && hostMatches(new URL(result.url!).hostname, ownedHost) } catch { return false }
+    })
+    if (!match) return { ...unavailable, status: 'not_observed' }
+    return { status: 'observed', queryLabel, position: typeof match.position === 'number' ? match.position : null, title: match.title ?? null, snippet: match.snippet ?? match.description ?? null, themes: resultThemes(match, name, address) }
+  } catch (error) {
+    debugError('social.local-search', 'Local search visibility inspection failed', error, { name })
+    return unavailable
   }
 }
 

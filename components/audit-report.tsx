@@ -365,6 +365,21 @@ function CompetitorBenchmarkPanel({audit}:{audit:any}){
     </div>
   </section>
 }
+
+function LocalSearchVisibility({insight}:{insight:any}){
+  if(!insight||insight.status==='unavailable')return null
+  const observed=insight.status==='observed'
+  return <section className="mb-10">
+    <div className="mb-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{color:pink}}>Local search visibility</p>
+      <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">How Google describes your restaurant locally</h2>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">One brand-and-locality Google result check. These are observed result-language themes, not a generic keyword-ranking claim.</p>
+    </div>
+    <div className="rounded-3xl border border-border bg-card p-7">
+      {observed?<><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Observed query</p><p className="mt-2 text-lg font-semibold">{insight.queryLabel}</p></div>{insight.position!=null&&<span className="rounded-full bg-success/10 px-3 py-1.5 text-xs font-semibold text-success">Organic result #{insight.position}</span>}</div>{insight.title&&<p className="mt-6 font-medium">{insight.title}</p>}{insight.snippet&&<p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{insight.snippet}</p>}{insight.themes?.length>0&&<div className="mt-6"><p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Result-language themes</p><div className="mt-3 flex flex-wrap gap-2">{insight.themes.map((theme:string)=><span key={theme} className="rounded-full bg-muted px-3 py-1.5 text-sm">{theme}</span>)}</div></div>}</>:<><p className="text-lg font-semibold">Your owned website was not observed for this local brand search.</p><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">That does not prove you do not rank; it means this single evidence check did not surface the confirmed website. We do not infer keyword themes from that absence.</p></>}
+    </div>
+  </section>
+}
 function priorityText(p:any){
   if(typeof p==='string')return p
   return p?.title||p?.action||p?.whyItMatters||p?.summary||''
@@ -435,7 +450,7 @@ function GrowthEngineMap({audit}:{audit:any}){
 function OwnerReportMap(){
   const stops=[
     {href:'#engine',label:'Growth engine',detail:'Where demand leaks',icon:<Gauge className="h-4 w-4"/>},
-    {href:'#market',label:'Local market',detail:'Who diners compare',icon:<MapPin className="h-4 w-4"/>},
+    {href:'#market',label:'Local search',detail:'How Google describes you',icon:<MapPin className="h-4 w-4"/>},
     {href:'#voice',label:'Customer voice',detail:'What guests repeat',icon:<MessageSquare className="h-4 w-4"/>},
     {href:'#evidence',label:'Technical proof',detail:'What supports the score',icon:<FileSearch className="h-4 w-4"/>},
   ]
@@ -461,7 +476,7 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
       </div>
       <OwnerReportMap/>
       <div id="engine"><GrowthPillars result={r}/><GrowthLeaks interpretation={i}/><WebsiteOrderingGrowth audit={audit}/></div>
-      <div id="market"><CompetitorBenchmarkPanel audit={audit}/></div>
+      <div id="market"><LocalSearchVisibility insight={audit.localSearch}/></div>
       <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><SocialActivity social={audit.social}/></div>
       <GrowthEngineMap audit={audit}/>
 

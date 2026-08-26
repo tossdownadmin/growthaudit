@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { inspectHtml, fetchPageSpeed, fetchWebsiteHtml, type RestaurantInput } from '@/lib/audit'
-import { auditSocialProfiles, extractSocialLinks, scoreSocial, type DiscoveredSocials } from '@/lib/social'
+import { auditSocialProfiles, extractSocialLinks, inspectLocalSearchVisibility, scoreSocial, type DiscoveredSocials } from '@/lib/social'
 import { auditGoogleReviews, normalizeGooglePlacesReview, scoreReviewResponse, scoreSentiment, type ReviewAuditResult } from '@/lib/reviewAudit'
 import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
 import { scoreGrowthEngine, fallbackGrowthInterpretation } from '@/lib/growthEngine'
@@ -242,7 +242,11 @@ export async function POST(req: NextRequest) {
       }
     })()
 
-    const [, social, review, benchmark] = await Promise.all([pageSpeedPhase, socialPhase, reviewPhase, benchmarkPhase])
+    // One brand-specific query only. This replaces owner-facing competitor
+    // lists with evidence about the restaurant's own search-result language.
+    const localSearchPhase = inspectLocalSearchVisibility(input.name, input.address, input.websiteUrl)
+
+    const [, social, review, benchmark, localSearch] = await Promise.all([pageSpeedPhase, socialPhase, reviewPhase, benchmarkPhase, localSearchPhase])
 
     const socialSection = scoreSocial({ ...discoveredSocials, ...confirmedSocials }, social.profiles)
     const reviewResponseSection = scoreReviewResponse(review)
@@ -281,7 +285,7 @@ export async function POST(req: NextRequest) {
           'This is not a generic SEO report and not a software checklist. The owner should understand where growth is leaking and what to fix first.',
           'The five scored pillars are already deterministic: Website + Ordering, Reputation & Reviews, Getting Customers Back, Staying Connected, Knowing What Works. Do not recompute or contradict the scores.',
           'ORDERING: distinguish owned/branded ordering from marketplace handoff. If ordering points mainly to DoorDash/Uber Eats/Grubhub/etc, explain that the restaurant can get the transaction while owning less of the customer relationship. Do not overstate ownership when the evidence says unclear.',
-          'COMPETITIVE CONTEXT: discuss named competitors when benchmark.source is universal_v3 and candidates exist. When benchmark.presentationEligible is true, you may frame them as likely direct competitors; otherwise refer to them as nearby local reference points rather than confirmed direct competitors. Never name competitors when benchmark.source is not universal_v3. Compare rating/review strength and ordering posture only where evidence exists.',
+          'LOCAL SEARCH: localSearch reports only the restaurant\'s observed result language for one brand-and-locality Google query. It is not a generic keyword ranking or competitor analysis. Do not name competitors or make competitiveness claims.',
           'REPUTATION + REVIEWS: treat Google rating and total review volume as the authoritative reputation baseline. Only use recent sentiment percentages, response rates, response quality, themes, or service-recovery conclusions when reviews.source is not google_places AND reviews.metrics.sampleSize >= 10. A 5-review Google Places snippet sample is illustrative only and must not drive precise percentages or themes.',
           'SOCIAL: posting recency/frequency/engagement are engagement signals, not vanity metrics. Use exact posting frequency only when postsAnalyzed >= 4, evidenceConfidence >= 0.55, and the weekly cadence is <= 14. Use an exact engagement percentage only when postsAnalyzed >= 10, followers >= 300, evidenceConfidence >= 0.65, and the rate is <= 10%. Otherwise describe activity directionally. Absolute followers are informational only. Never invent follower growth.',
           'RETENTION: publicly detected loyalty, account, email, SMS, WhatsApp, app, and direct-order paths are evidence of a repeat-customer system. Absence means "not detected publicly", not proof that internal CRM does not exist.',
@@ -291,7 +295,7 @@ export async function POST(req: NextRequest) {
           'Good language sounds like: "You are winning attention, but the customer journey leaks after the first order." "Your main order CTA sends guests to a marketplace." "Your reputation is strong, but nearby alternatives have deeper review proof." "Social attention is active, but there is no visible repeat-customer capture path."',
           'Avoid jargon and generic advice. Do not mention canonical tags or pixels in the executive summary unless they materially explain a growth problem. Technical evidence can remain lower in the report.',
           'CRITICAL: respond with ONLY the raw JSON object. No markdown, no code fences, no commentary before or after.',
-          `Evidence: ${JSON.stringify({ input, result, website, social: socialEvidence, reviews: reviewEvidence, benchmark })}`,
+          `Evidence: ${JSON.stringify({ input, result, website, social: socialEvidence, reviews: reviewEvidence, localSearch })}`,
         ].join('\n')
         // Provider-agnostic model call. Same prompt, but routed through
         // callModel so the deployment can run on OpenAI, Anthropic, or (with no
@@ -368,6 +372,7 @@ export async function POST(req: NextRequest) {
         examples: review.sample.slice(0, 3).map(r => ({ rating: r.rating, text: r.text.slice(0, 240), createdAt: r.createdAt, ownerResponded: r.ownerResponded })),
       },
       benchmark,
+      localSearch,
       // Internal QA only. The report UI intentionally does not render provider
       // failures or missing-evidence plumbing. This object lets us inspect a
       // deployed audit and immediately see which upstream source succeeded,
