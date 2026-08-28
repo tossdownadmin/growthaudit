@@ -21,6 +21,7 @@ status: maintained
 | Firestore | saved reports and leads | No | no share link/persistence |
 | GoHighLevel | lead/contact sync | No | lead flow reports success |
 | Lead webhook | generic lead integration | No | failure logged and ignored |
+| Google Analytics 4 | anonymous page and audit-funnel measurement | No | tracking calls are disabled when the Measurement ID is absent |
 
 ## Google
 
@@ -41,6 +42,10 @@ The same provider-agnostic client supports report prose and competitor semantics
 ## Persistence and CRM
 
 Firestore Admin runs only server-side. GoHighLevel uses a private integration token. A generic webhook receives the lead payload as JSON. All three are best-effort relative to delivering the report.
+
+## Analytics
+
+GA4 is a browser-side, optional analytics integration. It records public, aggregate funnel events only and must never receive lead PII or private report data. See [[GA4 Analytics]].
 
 ## Related notes
 

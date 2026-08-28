@@ -28,6 +28,7 @@ This directory is an Obsidian-compatible knowledge base for the complete project
 - [[05-APIs/API Index|API Index]] — internal HTTP contracts
 - [[06-Data/Data Model|Data Model]] — request, evidence, result, and persistence structures
 - [[07-Integrations/Integration Index|Integration Index]] — external providers and degradation behavior
+- [[07-Integrations/GA4 Analytics|GA4 Analytics]] — anonymous audit-funnel measurement and privacy rules
 - [[08-Operations/Local Development|Local Development]] — installation, configuration, and commands
 - [[08-Operations/Deployment|Deployment]] — Vercel deployment architecture and procedure
 - [[08-Operations/Security and Reliability|Security and Reliability]] — controls, privacy, limits, and operational risks

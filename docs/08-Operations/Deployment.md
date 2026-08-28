@@ -58,6 +58,8 @@ This documentation change is intentionally local on `feature/my-update`; it does
 
 Configure variables separately for Development, Preview, and Production. After the first deployment, set `NEXT_PUBLIC_BASE_URL` to the canonical HTTPS domain and redeploy. Vercel's `VERCEL_URL` is the automatic fallback for the internal competitor call.
 
+For GA4, set `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Production and, if preview-traffic measurement is desired, Preview. Because `NEXT_PUBLIC_` values are embedded at build time, redeploy after adding or changing it. See [[07-Integrations/GA4 Analytics|GA4 Analytics]].
+
 ## Health checks
 
 - `/` loads without server errors.
@@ -65,6 +67,7 @@ Configure variables separately for Development, Preview, and Production. After t
 - `/api/social/check` confirms SocialCrawl key presence without exposing it.
 - a complete audit returns provider diagnostics.
 - a known persisted `/r/{id}` renders with metadata.
+- GA4 Realtime/DebugView receives a page view and an anonymous audit-funnel event when GA4 is configured.
 
 ## Rollback
 

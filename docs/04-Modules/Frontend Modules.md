@@ -8,7 +8,7 @@ status: maintained
 
 ## `app/layout.tsx`
 
-Root application shell. It uses a resilient local system-font stack rather than build-time Google Font downloads, imports global CSS, declares product metadata, and provides the HTML/body wrapper. This keeps Vercel builds independent of Google Fonts availability.
+Root application shell. It uses a resilient local system-font stack rather than build-time Google Font downloads, imports global CSS, declares product metadata, and provides the HTML/body wrapper. It mounts the optional GA4 tag once for all routes when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is configured. This keeps Vercel builds independent of Google Fonts availability.
 
 ## `app/page.tsx`
 
@@ -24,6 +24,7 @@ Responsibilities:
 - progress-stage animation during the long audit request
 - dual-stage lead submission using one `submissionId`
 - report persistence and share URL handling
+- anonymous GA4 funnel events; no lead PII is sent to analytics
 - switching between landing, running, and report states
 
 Main state includes `query`, `suggestions`, `detail`, `loading`, `audit`, `error`, `auditStage`, `showLead`, and `shareUrl`.
@@ -63,6 +64,10 @@ Complete report presentation layer. It translates normalized audit output into:
 - reviews, sentiment, themes, and response behavior
 
 The component deliberately hides many provider plumbing failures from the owner-facing narrative while lower-level diagnostics remain in the returned audit object. Its visual system uses a dark editorial hero, high-contrast score treatment, consistent rounded evidence cards, and a direct Tossdown handoff.
+
+## `components/google-analytics.tsx` and `lib/analytics.ts`
+
+The root tag component validates the configured public Measurement ID and loads Google Analytics after application interactivity. The client helper provides typed, no-op-safe audit-funnel event dispatch. Event names and permitted non-PII parameters are defined in [[07-Integrations/GA4 Analytics|GA4 Analytics]].
 
 ## `app/globals.css`
 

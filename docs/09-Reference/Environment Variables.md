@@ -41,6 +41,14 @@ Precedence is documented in [[04-Modules/Provider Modules|Provider Modules]]. Wi
 
 Although `NEXT_PUBLIC_BASE_URL` is public by naming convention, it must contain only an origin and never a credential.
 
+## Analytics
+
+| Variable | Required | Used by | Purpose |
+|---|---:|---|---|
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | No | root layout, client audit funnel | public GA4 Measurement ID beginning with `G-` |
+
+This is intentionally public: it is embedded in the Google tag delivered to visitors. It must not be confused with a Google API key, service account credential, or Google Ads conversion secret.
+
 ## Firestore
 
 All three are required together to enable persistence:
@@ -73,6 +81,7 @@ AI_API_KEY=
 AI_MODEL=gpt-4o
 
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
 ```
 
 > [!danger]
