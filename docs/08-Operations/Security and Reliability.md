@@ -17,6 +17,7 @@ status: maintained
 - website/provider phases use bounded timeouts and catch failures
 - logs report key presence/length rather than secret values
 - Firestore Admin is never imported into client components
+- GA4 event dispatch is limited to anonymous audit-funnel state; lead PII is excluded
 
 ## Reliability model
 
@@ -43,6 +44,10 @@ Blank `ALLOWED_ORIGINS` currently permits all origins. This differs from the com
 ### Stored lead data
 
 Firestore audit documents store lead details alongside reports. Public projection is safe, but Firestore rules, retention, access logging, and deletion policy are infrastructure concerns outside this repository.
+
+### Analytics consent and PII
+
+The GA4 Measurement ID is public but analytics must remain optional. If visitors are subject to consent requirements, implement consent collection and Consent Mode before storing analytics cookies. Do not place lead or report identifiers in GA4 event data; see [[07-Integrations/GA4 Analytics|GA4 Analytics]].
 
 ### Lead-submit secret and browser flow
 
