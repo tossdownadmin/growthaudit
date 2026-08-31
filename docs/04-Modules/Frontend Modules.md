@@ -69,6 +69,14 @@ The component deliberately hides many provider plumbing failures from the owner-
 
 The root tag component validates the configured public Measurement ID and loads Google Analytics after application interactivity. The client helper provides typed, no-op-safe audit-funnel event dispatch. Event names and permitted non-PII parameters are defined in [[07-Integrations/GA4 Analytics|GA4 Analytics]].
 
+## `components/microsoft-clarity.tsx`
+
+The root Clarity component validates `NEXT_PUBLIC_CLARITY_PROJECT_ID` and loads Microsoft Clarity after application interactivity. It adds no custom user or CRM properties. See [[07-Integrations/Microsoft Clarity|Microsoft Clarity]].
+
+## Header and calls to action
+
+The landing and audit-progress shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report retains its report-level handoff CTA.
+
 ## `app/globals.css`
 
 Tailwind CSS 4 entry point and application theme. Defines the light palette, Tossdown pink, semantic success/warning/danger colors, resilient typography, global sizing, selection colors, audit progress animation, and reusable premium-surface treatments.

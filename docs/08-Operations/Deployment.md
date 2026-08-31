@@ -60,6 +60,8 @@ Configure variables separately for Development, Preview, and Production. After t
 
 For GA4, set `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Production and, if preview-traffic measurement is desired, Preview. Because `NEXT_PUBLIC_` values are embedded at build time, redeploy after adding or changing it. See [[07-Integrations/GA4 Analytics|GA4 Analytics]].
 
+For Clarity, set `NEXT_PUBLIC_CLARITY_PROJECT_ID` (`wrhaf3hh74`) for Production and Preview as needed, then redeploy. See [[07-Integrations/Microsoft Clarity|Microsoft Clarity]].
+
 ## Health checks
 
 - `/` loads without server errors.
