@@ -75,7 +75,7 @@ The root Clarity component validates `NEXT_PUBLIC_CLARITY_PROJECT_ID` and loads 
 
 ## Header and calls to action
 
-The landing and audit-progress shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report retains its report-level handoff CTA.
+The landing, audit-progress, and report shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA.
 
 ## `app/globals.css`
 

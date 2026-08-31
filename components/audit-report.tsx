@@ -439,14 +439,23 @@ function OwnerReportMap(){
     {href:'#voice',label:'Customer voice',detail:'What guests repeat',icon:<MessageSquare className="h-4 w-4"/>},
     {href:'#evidence',label:'Technical proof',detail:'What supports the score',icon:<FileSearch className="h-4 w-4"/>},
   ]
-  return <nav aria-label="Report sections" className="my-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{stops.map((stop,index)=><a key={stop.href} href={stop.href} className="surface-card group rounded-2xl bg-card p-4 hover:-translate-y-0.5 hover:border-primary"><div className="flex items-center justify-between"><span className="font-mono text-xs" style={{color:pink}}>0{index+1}</span><span className="text-muted-foreground group-hover:text-primary">{stop.icon}</span></div><p className="mt-4 text-sm font-semibold">{stop.label}</p><p className="mt-1 text-xs text-muted-foreground">{stop.detail}</p></a>)}</nav>
+  return <div className="my-6 grid gap-4">
+    <nav aria-label="Report sections" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{stops.map((stop,index)=><a key={stop.href} href={stop.href} className="surface-card group rounded-2xl bg-card p-4 hover:-translate-y-0.5 hover:border-primary"><div className="flex items-center justify-between"><span className="font-mono text-xs" style={{color:pink}}>0{index+1}</span><span className="text-muted-foreground group-hover:text-primary">{stop.icon}</span></div><p className="mt-4 text-sm font-semibold">{stop.label}</p><p className="mt-1 text-xs text-muted-foreground">{stop.detail}</p></a>)}</nav>
+    <div className="grid gap-3 md:grid-cols-3">
+      <ReportCTA title="Turn attention into orders" detail="Make your strongest demand channel easier to act on." />
+      <ReportCTA title="Build the relationship" detail="Give repeat customers a direct path back to you." />
+      <ReportCTA title="Fix the highest-impact gap" detail="Turn this audit into a practical growth plan." />
+    </div>
+  </div>
 }
+
+function ReportCTA({title,detail}:{title:string;detail:string}){return <a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="group flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{detail}</span></span><ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" style={{color:pink}}/></a>}
 
 export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
   const r=audit.result
   const i=audit.interpretation
   return <main className="min-h-screen">
-    <header className="brand-header mx-auto flex max-w-6xl items-center justify-between px-6 py-7"><div className="text-xl font-semibold tracking-[-0.04em]">tossdown<span style={{color:pink}}>.</span></div><button onClick={onReset} className="rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:text-foreground">New audit</button></header>
+    <header className="brand-header mx-auto flex max-w-6xl items-center justify-between px-6 py-5"><a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="text-xl font-semibold tracking-[-0.04em] hover:opacity-75">tossdown<span style={{color:pink}}>.</span></a><div className="flex items-center gap-3"><a href="mailto:info@tossdown.com" className="hidden text-xs font-medium text-muted-foreground hover:text-foreground sm:block">info@tossdown.com</a><a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition-transform hover:-translate-y-0.5">Visit tossdown <ArrowRight className="ml-1 inline h-3.5 w-3.5"/></a><button onClick={onReset} className="rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:text-foreground">New audit</button></div></header>
     <section className="mx-auto max-w-6xl px-6 pb-24 pt-10">
       <div className="report-hero flex flex-col justify-between gap-8 p-7 md:flex-row md:items-end md:p-10">
         <div>
@@ -460,8 +469,8 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
         </div>
       </div>
       <OwnerReportMap/>
-      <div id="engine"><GrowthPillars result={r}/><GrowthLeaks interpretation={i}/><WebsiteOrderingGrowth audit={audit}/></div>
-      <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><SocialActivity social={audit.social}/></div>
+      <div id="engine"><GrowthPillars result={r}/><ReportCTA title="See the growth engine clearly" detail="Talk with tossdown about the biggest scoring gap."/><GrowthLeaks interpretation={i}/><ReportCTA title="Make the next move" detail="Turn this leak into a focused improvement plan."/><WebsiteOrderingGrowth audit={audit}/><ReportCTA title="Own the next customer action" detail="Explore a stronger direct ordering path with tossdown."/></div>
+      <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><ReportCTA title="Turn customer voice into action" detail="Use your review and social signals to improve retention."/><SocialActivity social={audit.social}/><ReportCTA title="Keep customers connected" detail="Build a customer relationship channel that compounds."/></div>
       <GrowthEngineMap audit={audit}/>
 
       <div id="evidence" className="border-t border-border pt-12">
