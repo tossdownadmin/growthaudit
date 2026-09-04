@@ -22,12 +22,20 @@ Responsibilities:
 - restaurant detail confirmation
 - international phone input and lead validation
 - progress-stage animation during the long audit request
+- separate asset-discovery and audit-running states so selection never flashes
+  the audit screen before confirmation
 - dual-stage lead submission using one `submissionId`
 - report persistence and share URL handling
 - anonymous GA4 funnel events; no lead PII is sent to analytics
 - switching between landing, running, and report states
+- conversion-first progress UI and sample-result proof before contact
 
 Main state includes `query`, `suggestions`, `detail`, `loading`, `audit`, `error`, `auditStage`, `showLead`, and `shareUrl`.
+
+Phone-country options store the ISO country code as their actual value while
+displaying the calling code separately (for example, value `PK`, label
+`PK +92`). This allows national Pakistani inputs with or without the leading
+zero to normalize correctly through `libphonenumber-js`.
 
 ## `app/direct-audit/page.tsx`
 
@@ -68,6 +76,20 @@ The component deliberately hides many provider plumbing failures from the owner-
 ## `components/google-analytics.tsx` and `lib/analytics.ts`
 
 The root tag component validates the configured public Measurement ID and loads Google Analytics after application interactivity. The client helper provides typed, no-op-safe audit-funnel event dispatch. Event names and permitted non-PII parameters are defined in [[07-Integrations/GA4 Analytics|GA4 Analytics]].
+
+## `components/microsoft-clarity.tsx`
+
+The root Clarity component validates `NEXT_PUBLIC_CLARITY_PROJECT_ID` and loads Microsoft Clarity after application interactivity. It adds no custom user or CRM properties. See [[07-Integrations/Microsoft Clarity|Microsoft Clarity]].
+
+## Header and calls to action
+
+The landing, audit-progress, and report shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA.
+
+The entry flow shows four lightweight steps (`Find`, `Confirm`, `Audit`,
+`Unlock`) and keeps the website-required validation explicit. The audit runs
+before lead capture; when complete, a blurred real-report preview sits behind
+the unlock form. GA4 and Clarity remain mounted at the root and are not removed
+or renamed.
 
 ## `app/globals.css`
 

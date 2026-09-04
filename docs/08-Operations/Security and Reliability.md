@@ -18,6 +18,7 @@ status: maintained
 - logs report key presence/length rather than secret values
 - Firestore Admin is never imported into client components
 - GA4 event dispatch is limited to anonymous audit-funnel state; lead PII is excluded
+- Microsoft Clarity receives no custom lead, CRM, or report identifiers
 
 ## Reliability model
 
@@ -48,6 +49,8 @@ Firestore audit documents store lead details alongside reports. Public projectio
 ### Analytics consent and PII
 
 The GA4 Measurement ID is public but analytics must remain optional. If visitors are subject to consent requirements, implement consent collection and Consent Mode before storing analytics cookies. Do not place lead or report identifiers in GA4 event data; see [[07-Integrations/GA4 Analytics|GA4 Analytics]].
+
+Clarity has its own masking and consent controls. Review them before marketing the audit in jurisdictions requiring consent; the application does not attach custom PII to Clarity.
 
 ### Lead-submit secret and browser flow
 

@@ -22,6 +22,7 @@ status: maintained
 | GoHighLevel | lead/contact sync | No | lead flow reports success |
 | Lead webhook | generic lead integration | No | failure logged and ignored |
 | Google Analytics 4 | anonymous page and audit-funnel measurement | No | tracking calls are disabled when the Measurement ID is absent |
+| Microsoft Clarity | privacy-aware session and interaction diagnostics | No | tracking is disabled when the project ID is absent |
 
 ## Google
 
@@ -46,6 +47,8 @@ Firestore Admin runs only server-side. GoHighLevel uses a private integration to
 ## Analytics
 
 GA4 is a browser-side, optional analytics integration. It records public, aggregate funnel events only and must never receive lead PII or private report data. See [[GA4 Analytics]].
+
+Microsoft Clarity is a separate optional browser-side diagnostics integration. It is loaded after interactivity and does not receive custom lead or CRM data. See [[Microsoft Clarity]].
 
 ## Related notes
 

@@ -31,6 +31,8 @@ The tag is mounted once in the root layout using Next.js `Script` with the `afte
 | `audit_completed` | the audit API returns successfully | `growth_score`, `evidence_coverage` |
 | `report_shared` | a saved report receives its share URL | `growth_score` |
 
+CTA links are external handoffs to tossdown.com and do not carry restaurant, report, or lead identifiers in their destination URL.
+
 `generate_lead` is the primary conversion candidate. Mark it as a GA4 Key Event after GA4 receives it. `audit_completed` may also be marked when audit completion is a useful marketing outcome.
 
 ## Privacy boundary
