@@ -22,6 +22,8 @@ Responsibilities:
 - restaurant detail confirmation
 - international phone input and lead validation
 - progress-stage animation during the long audit request
+- separate asset-discovery and audit-running states so selection never flashes
+  the audit screen before confirmation
 - dual-stage lead submission using one `submissionId`
 - report persistence and share URL handling
 - anonymous GA4 funnel events; no lead PII is sent to analytics

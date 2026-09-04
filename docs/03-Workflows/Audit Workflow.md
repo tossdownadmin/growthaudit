@@ -76,6 +76,12 @@ The client waits 350 ms after typing and searches when the trimmed query has at 
 
 The Google-linked website is fetched and parsed for recognized social URLs. When Google has no website, the application may search Google results through SerpApi using the restaurant name and locality, then use a bounded brand-only fallback query for chain-level sites/accounts that do not publish branch location text. A multi-location brand website may be verified using brand/title evidence plus city-level evidence; an individual branch’s full street address is not required on the chain’s central website. Missing Instagram, Facebook, or TikTok profiles may be searched with platform-specific Google queries when `SERPAPI_API_KEY` is configured. Brand assets retain their discovery source and verification state so independently found assets are clearly marked as missing from GMB and the website as a customer-relationship gap.
 
+After a restaurant is selected, the confirmation screen stays mounted while
+website and social discovery completes. It shows an explicit discovery status
+and disables the audit action until those fields are ready. Asset discovery
+must never reuse the full-audit loading screen; the audit animation begins only
+after the owner confirms the enriched restaurant details.
+
 ### 3. Lead lifecycle
 
 One `submissionId` is generated in the browser. A first best-effort lead request starts without waiting. After report persistence, a second request with the same ID merges the report URL and a compact summary into the lead record.
