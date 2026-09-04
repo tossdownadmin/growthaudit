@@ -30,6 +30,11 @@ Responsibilities:
 
 Main state includes `query`, `suggestions`, `detail`, `loading`, `audit`, `error`, `auditStage`, `showLead`, and `shareUrl`.
 
+Phone-country options store the ISO country code as their actual value while
+displaying the calling code separately (for example, value `PK`, label
+`PK +92`). This allows national Pakistani inputs with or without the leading
+zero to normalize correctly through `libphonenumber-js`.
+
 ## `app/direct-audit/page.tsx`
 
 Alternate route for the same audit experience. It preserves an explicit `/direct-audit` entry point without creating a second workflow.
