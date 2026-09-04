@@ -54,17 +54,19 @@ sequenceDiagram
 ### Conversion-first entry flow (current plan)
 
 The public entry flow is intentionally short and transparent: search a Google
-Business Profile, confirm the location and website, preview what the audit
-measures, then provide contact details before the audit runs. A compact progress
-indicator keeps the owner oriented (`Find`, `Confirm`, `Unlock`, `Audit`). If
+Business Profile, confirm the location and website, run the audit with visible
+progress, then show the completed report as a blurred preview before requesting
+contact details to unlock it. A compact progress indicator keeps the owner
+oriented (`Find`, `Confirm`, `Audit`, `Unlock`). If
 Google cannot return a location, the UI offers a manual fallback rather than a
 dead end. Website confirmation remains required: when neither GMB nor public
 search provides a candidate, the owner must enter a valid URL and sees an
 explicit explanation before continuing.
 
 The landing page presents the free/no-login/time estimate and a small sample
-result before contact. This is presentation-only and does not change provider
-requests, audit scoring, persistence, or analytics event names/parameters.
+result. The real provider audit runs before contact capture. Lead capture,
+persistence, and CRM enrichment begin only after the owner submits the unlock
+form; existing analytics event names and non-PII parameters remain unchanged.
 
 ### 1. Restaurant discovery
 
