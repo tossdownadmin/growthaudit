@@ -51,6 +51,21 @@ sequenceDiagram
 
 ## Phase details
 
+### Conversion-first entry flow (current plan)
+
+The public entry flow is intentionally short and transparent: search a Google
+Business Profile, confirm the location and website, preview what the audit
+measures, then provide contact details before the audit runs. A compact progress
+indicator keeps the owner oriented (`Find`, `Confirm`, `Unlock`, `Audit`). If
+Google cannot return a location, the UI offers a manual fallback rather than a
+dead end. Website confirmation remains required: when neither GMB nor public
+search provides a candidate, the owner must enter a valid URL and sees an
+explicit explanation before continuing.
+
+The landing page presents the free/no-login/time estimate and a small sample
+result before contact. This is presentation-only and does not change provider
+requests, audit scoring, persistence, or analytics event names/parameters.
+
 ### 1. Restaurant discovery
 
 The client waits 350 ms after typing and searches when the trimmed query has at least three characters. The suggestion list is bounded, scrollable, and may escape its decorative hero container so it is never clipped or obscures the selection flow on smaller screens. Selecting a suggestion requests Google fields for identity, coordinates, website, reputation, opening hours, price, category, and a small review sample.

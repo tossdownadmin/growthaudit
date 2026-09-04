@@ -26,6 +26,7 @@ Responsibilities:
 - report persistence and share URL handling
 - anonymous GA4 funnel events; no lead PII is sent to analytics
 - switching between landing, running, and report states
+- conversion-first progress UI and sample-result proof before contact
 
 Main state includes `query`, `suggestions`, `detail`, `loading`, `audit`, `error`, `auditStage`, `showLead`, and `shareUrl`.
 
@@ -76,6 +77,11 @@ The root Clarity component validates `NEXT_PUBLIC_CLARITY_PROJECT_ID` and loads 
 ## Header and calls to action
 
 The landing, audit-progress, and report shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA.
+
+The entry flow shows four lightweight steps (`Find`, `Confirm`, `Unlock`,
+`Audit`) and keeps the website-required validation explicit. This is a UI-only
+layer over the existing discovery and audit contracts. GA4 and Clarity remain
+mounted at the root and are not removed or renamed.
 
 ## `app/globals.css`
 

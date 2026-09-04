@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ArrowRight, BarChart3, Check, ExternalLink, FileSearch, Gauge, Link2, MapPin, MessageSquare, Minus, Monitor, Repeat2, Share2, ShoppingBag, Smartphone, Sparkles, Star, Store, TrendingUp, Users, X } from 'lucide-react'
 import { SiInstagram, SiFacebook, SiTiktok, SiYoutube, SiX, SiThreads, SiPinterest, SiSnapchat, SiWhatsapp } from 'react-icons/si'
 
-export const pink = '#ed1f5b'
+export const pink = '#e51451'
 export const PLATFORM_LABEL: Record<string, string> = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', youtube: 'YouTube', twitter: 'X / Twitter', threads: 'Threads', linkedin: 'LinkedIn', pinterest: 'Pinterest', snapchat: 'Snapchat', whatsapp: 'WhatsApp' }
 
 // Client-facing framing: this audit inspects the restaurant's OWN stack of
