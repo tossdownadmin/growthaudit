@@ -70,7 +70,20 @@ form; existing analytics event names and non-PII parameters remain unchanged.
 
 ### 1. Restaurant discovery
 
-The client waits 350 ms after typing and searches when the trimmed query has at least three characters. The suggestion list is bounded, scrollable, and may escape its decorative hero container so it is never clipped or obscures the selection flow on smaller screens. Selecting a suggestion requests Google fields for identity, coordinates, website, reputation, opening hours, price, category, and a small review sample.
+The client requests coarse browser geolocation once and waits 350 ms after
+typing. Searches begin when the trimmed query has at least three characters.
+When coordinates are available, autocomplete uses a 25 km Google Places
+location bias and restaurant/food-place primary types, so generic brand names
+surface nearby branches first. This is a ranking bias rather than a geographic
+restriction: users can still type an area or city to find another location. If
+location access is denied, unavailable, or times out, autocomplete falls back
+to the existing worldwide search.
+
+The suggestion list is bounded, scrollable, and may escape its decorative hero
+container so it is never clipped or obscures the selection flow on smaller
+screens. Selecting a suggestion requests Google fields for identity,
+coordinates, website, reputation, opening hours, price, category, and a small
+review sample.
 
 ### 2. Brand-asset and social discovery
 

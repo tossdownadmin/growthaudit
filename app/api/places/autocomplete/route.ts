@@ -4,8 +4,15 @@ import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
 export async function GET(req: NextRequest) {
   const started = startedAt()
   const input = req.nextUrl.searchParams.get('input')?.trim()
+  const latitudeParam = req.nextUrl.searchParams.get('lat')
+  const longitudeParam = req.nextUrl.searchParams.get('lng')
+  const latitude = Number(latitudeParam)
+  const longitude = Number(longitudeParam)
+  const hasLocation = latitudeParam !== null && longitudeParam !== null
+    && Number.isFinite(latitude) && Number.isFinite(longitude)
+    && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
   const key = process.env.GOOGLE_PLACES_API_KEY
-  debugLog('places.autocomplete', 'Request received', { inputLength: input?.length ?? 0, keyConfigured: Boolean(key) })
+  debugLog('places.autocomplete', 'Request received', { inputLength: input?.length ?? 0, keyConfigured: Boolean(key), locationBiased: hasLocation })
   if (!input) return NextResponse.json({ suggestions: [] })
   if (!key) {
     debugError('places.autocomplete', 'Google Places key is missing', new Error('GOOGLE_PLACES_API_KEY is not configured'))
@@ -14,7 +21,19 @@ export async function GET(req: NextRequest) {
   try {
     const response = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key },
-      body: JSON.stringify({ input, languageCode: 'en' }),
+      body: JSON.stringify({
+        input,
+        languageCode: 'en',
+        includedPrimaryTypes: ['restaurant', 'cafe', 'bakery', 'meal_takeaway', 'meal_delivery'],
+        ...(hasLocation ? {
+          locationBias: {
+            circle: {
+              center: { latitude, longitude },
+              radius: 25000,
+            },
+          },
+        } : {}),
+      }),
     })
     const data = await response.json().catch(() => ({}))
     if (!response.ok) {

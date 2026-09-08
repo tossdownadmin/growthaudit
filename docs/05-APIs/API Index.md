@@ -10,7 +10,7 @@ All third-party credentials remain server-side. Unless noted, errors are JSON ob
 
 | Method | Route | Purpose | Key dependencies |
 |---|---|---|---|
-| GET | `/api/places/autocomplete?input=` | Restaurant suggestions | Google Places |
+| GET | `/api/places/autocomplete?input=&lat=&lng=` | Restaurant suggestions, optionally biased near the user | Google Places |
 | GET | `/api/places/details?placeId=` | Selected location evidence | Google Places |
 | GET | `/api/social/discover?url=&name=&address=` | Public profile discovery | Website, optional SerpApi Google-result search |
 | GET | `/api/social/check` | Social diagnostics | Optional SocialCrawl |

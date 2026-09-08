@@ -17,6 +17,7 @@ Main client-side controller and landing experience.
 Responsibilities:
 
 - debounced Google Places autocomplete
+- optional coarse browser geolocation for nearby-first restaurant suggestions
 - location selection and detail retrieval
 - best-effort website/social discovery
 - restaurant detail confirmation
