@@ -426,9 +426,9 @@ function GrowthEngineMap({audit}:{audit:any}){
     <div className="overflow-hidden rounded-3xl border border-border bg-card">
       {rows.map(row=>{const section=sections[row.key]??audit.result?.sections?.find((s:any)=>s.key===row.key);if(!section||section.status==='unknown'||typeof section.score!=='number')return null;const score=section.score;const color=growthScoreColor(score,section?.status);return <div key={row.key} className="grid gap-3 border-b border-border p-5 last:border-0 md:grid-cols-[1fr_100px] md:items-center"><div><div className="flex items-center gap-2 font-medium">{growthIcon(row.key)}{row.label}</div><p className="mt-1 text-sm text-muted-foreground">{row.sub}</p></div><div className="text-left md:text-right"><span className="text-2xl font-semibold" style={{color}}>{score}</span><span className="text-xs text-muted-foreground">/100</span></div></div>})}
     </div>
-    <div className="mt-5 flex flex-col items-start justify-between gap-4 rounded-3xl px-7 py-6 text-white shadow-xl md:flex-row md:items-center" style={{background:'linear-gradient(115deg, #ed1f5b, #bf1648 58%, #6d1a66)'}}>
+    <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-3xl px-7 py-6 text-white shadow-xl md:flex-row md:items-center" style={{background:'linear-gradient(115deg, #e51451, #b90f43 58%, #771262)'}}>
       <div><p className="text-sm font-semibold">Close the leaks before buying more traffic.</p><p className="mt-1 text-sm text-white/80">tossdown connects the website, direct ordering, customer relationship, reputation and growth stack.</p><a href="mailto:info@tossdown.com" className="mt-2 inline-block text-xs font-medium text-white/80 underline-offset-4 hover:text-white hover:underline">info@tossdown.com</a></div>
-      <a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black shadow-lg hover:-translate-y-0.5">Talk to tossdown <ArrowRight className="h-4 w-4"/></a>
+      <a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black shadow-lg transition-transform hover:-translate-y-0.5">Talk to tossdown <ArrowRight className="h-4 w-4"/></a>
     </div>
   </section>
 }
@@ -442,14 +442,14 @@ function OwnerReportMap(){
   return <div className="my-6 grid gap-4">
     <nav aria-label="Report sections" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{stops.map((stop,index)=><a key={stop.href} href={stop.href} className="surface-card group rounded-2xl bg-card p-4 hover:-translate-y-0.5 hover:border-primary"><div className="flex items-center justify-between"><span className="font-mono text-xs" style={{color:pink}}>0{index+1}</span><span className="text-muted-foreground group-hover:text-primary">{stop.icon}</span></div><p className="mt-4 text-sm font-semibold">{stop.label}</p><p className="mt-1 text-xs text-muted-foreground">{stop.detail}</p></a>)}</nav>
     <div className="grid gap-3 md:grid-cols-3">
-      <ReportCTA title="Turn attention into orders" detail="Make your strongest demand channel easier to act on." />
-      <ReportCTA title="Build the relationship" detail="Give repeat customers a direct path back to you." />
-      <ReportCTA title="Fix the highest-impact gap" detail="Turn this audit into a practical growth plan." />
+      <ReportCTA title="Turn attention into orders" detail="Make your strongest demand channel easier to act on." href="https://tossdown.com/restaurant-website" compact />
+      <ReportCTA title="Build the relationship" detail="Give repeat customers a direct path back to you." href="https://tossdown.com/crm-management" compact />
+      <ReportCTA title="Fix the highest-impact gap" detail="Turn this audit into a practical growth plan." href="https://tossdown.com/book-a-strategy-call" compact />
     </div>
   </div>
 }
 
-function ReportCTA({title,detail}:{title:string;detail:string}){return <a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="group flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{detail}</span></span><ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" style={{color:pink}}/></a>}
+function ReportCTA({title,detail,href,compact=false}:{title:string;detail:string;href:string;compact?:boolean}){return <a href={href} target="_blank" rel="noopener noreferrer" className={`group flex items-center justify-between gap-4 rounded-2xl px-5 py-5 text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl ${compact?'':'my-8'}`} style={{background:'linear-gradient(115deg, #e51451, #b90f43 58%, #771262)'}}><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-xs leading-5 text-white/80">{detail}</span></span><span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black shadow-md">Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/></span></a>}
 
 export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
   const r=audit.result
@@ -469,8 +469,8 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
         </div>
       </div>
       <OwnerReportMap/>
-      <div id="engine"><GrowthPillars result={r}/><ReportCTA title="See the growth engine clearly" detail="Talk with tossdown about the biggest scoring gap."/><GrowthLeaks interpretation={i}/><ReportCTA title="Make the next move" detail="Turn this leak into a focused improvement plan."/><WebsiteOrderingGrowth audit={audit}/><ReportCTA title="Own the next customer action" detail="Explore a stronger direct ordering path with tossdown."/></div>
-      <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><ReportCTA title="Turn customer voice into action" detail="Use your review and social signals to improve retention."/><SocialActivity social={audit.social}/><ReportCTA title="Keep customers connected" detail="Build a customer relationship channel that compounds."/></div>
+      <div id="engine"><GrowthPillars result={r}/><ReportCTA title="See the growth engine clearly" detail="Talk with tossdown about the biggest scoring gap." href="https://tossdown.com/book-a-strategy-call"/><GrowthLeaks interpretation={i}/><ReportCTA title="Make the next move" detail="Turn this leak into a focused improvement plan." href="https://tossdown.com/book-a-strategy-call"/><WebsiteOrderingGrowth audit={audit}/><ReportCTA title="Own the next customer action" detail="Explore a stronger direct ordering path with tossdown." href="https://tossdown.com/restaurant-website"/></div>
+      <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><ReportCTA title="Turn customer voice into action" detail="Use your review and social signals to improve retention." href="https://tossdown.com/restaurant-social-media"/><SocialActivity social={audit.social}/><ReportCTA title="Keep customers connected" detail="Build a customer relationship channel that compounds." href="https://tossdown.com/crm-management"/></div>
       <GrowthEngineMap audit={audit}/>
 
       <div id="evidence" className="border-t border-border pt-12">

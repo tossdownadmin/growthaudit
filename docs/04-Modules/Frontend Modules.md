@@ -84,7 +84,14 @@ The root Clarity component validates `NEXT_PUBLIC_CLARITY_PROJECT_ID` and loads 
 
 ## Header and calls to action
 
-The landing, audit-progress, and report shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA.
+The landing, audit-progress, and report shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA. Report CTAs use one high-contrast Tossdown pink-gradient treatment and consistent vertical spacing so they remain visually separate from audit evidence.
+
+Report CTA destinations are contextual:
+
+- Strategy and growth-plan handoffs link to `https://tossdown.com/book-a-strategy-call`.
+- Website and direct-ordering actions link to `https://tossdown.com/restaurant-website`.
+- Customer voice and social actions link to `https://tossdown.com/restaurant-social-media`.
+- Customer relationship and CRM actions link to `https://tossdown.com/crm-management`.
 
 The entry flow shows four lightweight steps (`Find`, `Confirm`, `Audit`,
 `Unlock`) and keeps the website-required validation explicit. The audit runs
@@ -98,7 +105,7 @@ Tailwind CSS 4 entry point and application theme. Defines the light palette, Tos
 
 ## Contact and handoff policy
 
-- The owner-facing call to action links to `https://tossdown.com`.
+- Owner-facing calls to action use the contextual destination documented above; the final “Talk to tossdown” handoff links to the strategy-call page.
 - Any displayed Tossdown email address uses `info@tossdown.com`.
 
 ## Related notes
