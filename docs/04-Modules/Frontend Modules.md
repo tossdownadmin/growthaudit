@@ -18,6 +18,7 @@ Responsibilities:
 
 - debounced Google Places autocomplete
 - optional coarse browser geolocation for nearby-first restaurant suggestions
+- a non-interactive location note beneath restaurant search
 - location selection and detail retrieval
 - best-effort website/social discovery
 - restaurant detail confirmation

@@ -57,9 +57,10 @@ The public entry flow is intentionally short and transparent: search a Google
 Business Profile, confirm the location and website, run the audit with visible
 progress, then show the completed report as a blurred preview before requesting
 contact details to unlock it. A compact progress indicator keeps the owner
-oriented (`Find`, `Confirm`, `Audit`, `Unlock`). If
-Google cannot return a location, the UI offers a manual fallback rather than a
-dead end. Website confirmation remains required: when neither GMB nor public
+oriented (`Find`, `Confirm`, `Audit`, `Unlock`). The search form shows a short,
+non-interactive note asking owners to turn on browser location so nearby
+restaurants can be prioritized; it does not present a manual restaurant-entry
+action. Website confirmation remains required: when neither GMB nor public
 search provides a candidate, the owner must enter a valid URL and sees an
 explicit explanation before continuing.
 
