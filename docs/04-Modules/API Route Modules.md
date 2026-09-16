@@ -10,9 +10,12 @@ status: maintained
 
 `GET` adapter for Google Places Autocomplete (New). Requires `input` and
 `GOOGLE_PLACES_API_KEY`; accepts optional validated `lat` and `lng` query
-parameters, applies a 25 km location bias plus restaurant/food-place primary
-types, maps provider predictions to a compact UI shape, and returns
-502/503-safe error messages. Invalid or missing coordinates are ignored.
+parameters. With coordinates it first applies a 50 km location restriction,
+supplies an origin, and sorts predictions with distance data nearest-first; if
+no local match is returned, it retries once without the restriction. It also
+limits predictions to restaurant/food-place primary types, maps the provider
+response to a compact UI shape, and returns 502/503-safe error messages.
+Invalid or missing coordinates use the worldwide request directly.
 
 ## `app/api/places/details/route.ts`
 

@@ -19,29 +19,46 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ suggestions: [], error: 'GOOGLE_PLACES_API_KEY is not configured.' }, { status: 503 })
   }
   try {
-    const response = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key },
+    const requestPlaces = (localOnly: boolean) => fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key },
       body: JSON.stringify({
         input,
         languageCode: 'en',
         includedPrimaryTypes: ['restaurant', 'cafe', 'bakery', 'meal_takeaway', 'meal_delivery'],
-        ...(hasLocation ? {
-          locationBias: {
+        ...(localOnly && hasLocation ? {
+          origin: { latitude, longitude },
+          locationRestriction: {
             circle: {
               center: { latitude, longitude },
-              radius: 25000,
+              radius: 50000,
             },
           },
         } : {}),
       }),
     })
-    const data = await response.json().catch(() => ({}))
+    let response = await requestPlaces(hasLocation)
+    let data = await response.json().catch(() => ({}))
     if (!response.ok) {
       debugError('places.autocomplete', 'Google Places request failed', new Error(`HTTP ${response.status}`), { status: response.status, providerError: data?.error?.message })
       return NextResponse.json({ suggestions: [], error: 'Places search unavailable.' }, { status: 502 })
     }
-    const suggestions = (data.suggestions ?? []).map((s: any) => { const p = s.placePrediction; return { placeId: p?.placeId, name: p?.structuredFormat?.mainText?.text ?? p?.text?.text ?? '', displayName: p?.structuredFormat?.mainText?.text ?? '', formattedAddress: p?.structuredFormat?.secondaryText?.text ?? '', types: p?.types ?? [] } })
-    debugLog('places.autocomplete', 'Request completed', { suggestionCount: suggestions.length, duration: elapsed(started) })
+    let usedWorldwideFallback = false
+    if (hasLocation && (data.suggestions?.length ?? 0) === 0) {
+      usedWorldwideFallback = true
+      response = await requestPlaces(false)
+      data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        debugError('places.autocomplete', 'Google Places fallback request failed', new Error(`HTTP ${response.status}`), { status: response.status, providerError: data?.error?.message })
+        return NextResponse.json({ suggestions: [], error: 'Places search unavailable.' }, { status: 502 })
+      }
+    }
+    const suggestions = (data.suggestions ?? []).map((s: any) => { const p = s.placePrediction; return { placeId: p?.placeId, name: p?.structuredFormat?.mainText?.text ?? p?.text?.text ?? '', displayName: p?.structuredFormat?.mainText?.text ?? '', formattedAddress: p?.structuredFormat?.secondaryText?.text ?? '', types: p?.types ?? [], distanceMeters: typeof p?.distanceMeters === 'number' ? p.distanceMeters : null } }).sort((a: any, b: any) => {
+      const aDistance = typeof a.distanceMeters === 'number' ? a.distanceMeters : Number.POSITIVE_INFINITY
+      const bDistance = typeof b.distanceMeters === 'number' ? b.distanceMeters : Number.POSITIVE_INFINITY
+      return aDistance - bDistance
+    })
+    debugLog('places.autocomplete', 'Request completed', { suggestionCount: suggestions.length, locationRestricted: hasLocation && !usedWorldwideFallback, usedWorldwideFallback, duration: elapsed(started) })
     return NextResponse.json({ suggestions })
   } catch (error) {
     debugError('places.autocomplete', 'Unexpected request failure', error, { duration: elapsed(started) })

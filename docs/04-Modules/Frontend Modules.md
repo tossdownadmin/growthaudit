@@ -93,7 +93,9 @@ The root Clarity component validates `NEXT_PUBLIC_CLARITY_PROJECT_ID` and loads 
 
 ## Header and calls to action
 
-The landing, audit-progress, and report shells use a consistent tossdown-branded header. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA. Report CTAs use one high-contrast Tossdown pink-gradient treatment and consistent vertical spacing so they remain visually separate from audit evidence.
+The landing, audit-progress, and report shells use a consistent tossdown-branded header. The header renders the supplied official Tossdown wordmark asset rather than a text approximation. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA. Report CTAs use one high-contrast Tossdown pink-gradient treatment and consistent vertical spacing so they remain visually separate from audit evidence.
+
+The public landing page keeps score cards and the five audit-pillar cards equal-height within each responsive row. On narrow screens, search controls, statistic grids, card grids, and footer contact links use explicit mobile layouts rather than relying on incidental wrapping.
 
 Report CTA destinations are contextual:
 
@@ -102,11 +104,13 @@ Report CTA destinations are contextual:
 - Customer voice and social actions link to `https://tossdown.com/restaurant-social-media`.
 - Customer relationship and CRM actions link to `https://tossdown.com/crm-management`.
 
-The entry flow shows four lightweight steps (`Find`, `Confirm`, `Audit`,
-`Unlock`) and keeps the website-required validation explicit. The audit runs
-before lead capture; when complete, a blurred real-report preview sits behind
-the unlock form. GA4 and Clarity remain mounted at the root and are not removed
-or renamed.
+The entry flow shows three lightweight steps (`Find`, `Verify & audit`, `View
+report`) and keeps website-required validation explicit. After URL verification,
+the audit progress animation replaces the form content inside the same card.
+When complete, a blurred real-report preview sits behind a form labelled as a
+free-report handoff; the interface avoids lock/paywall language and explicitly
+states that no payment is required. GA4 and Clarity remain mounted at the root
+and are not removed or renamed.
 
 ## `app/globals.css`
 

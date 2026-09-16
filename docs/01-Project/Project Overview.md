@@ -14,11 +14,11 @@ Growth Audit is a lead-generation and diagnostic product for North American rest
 
 1. Search for a restaurant using Google Places.
 2. Select the exact business location.
-3. Review the website and automatically discovered social profiles.
-4. provide lead details to unlock the audit.
-5. Wait while independent evidence providers run concurrently.
-6. Review the Growth Engine Score, evidence, priorities, and paid-media readiness.
-7. Optionally receive a persistent shareable report URL when Firebase is enabled.
+3. Verify the website and automatically discovered social profiles, then watch
+   the audit run in the same verification surface.
+4. Provide lead details to view the completed free report.
+5. Review the Growth Engine Score, evidence, priorities, and paid-media readiness.
+6. Optionally receive a persistent shareable report URL when Firebase is enabled.
 
 ## Growth Engine model
 

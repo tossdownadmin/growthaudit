@@ -54,10 +54,11 @@ sequenceDiagram
 ### Conversion-first entry flow (current plan)
 
 The public entry flow is intentionally short and transparent: search a Google
-Business Profile, confirm the location and website, run the audit with visible
-progress, then show the completed report as a blurred preview before requesting
-contact details to unlock it. A compact progress indicator keeps the owner
-oriented (`Find`, `Confirm`, `Audit`, `Unlock`). The search form shows a short,
+Business Profile, verify the location and website, run the audit with visible
+progress inside that same verification surface, then show the completed report
+as a blurred preview before requesting contact details to view it. A compact
+three-step indicator keeps the owner oriented (`Find`, `Verify & audit`, `View
+report`). The search form shows a short,
 non-interactive note asking owners to turn on browser location so nearby
 restaurants can be prioritized; it does not present a manual restaurant-entry
 action. Website confirmation remains required: when neither GMB nor public
@@ -70,19 +71,20 @@ scores, five audit areas, a repeated search CTA, and the Tossdown contact
 footer. The hero and final CTA share the same Places search state and both enter
 the existing confirmation flow. The real provider audit runs before contact
 capture. Lead capture, persistence, and CRM enrichment begin only after the
-owner submits the unlock form; existing analytics event names and non-PII
+owner submits the free-report form; existing analytics event names and non-PII
 parameters remain unchanged.
 
 ### 1. Restaurant discovery
 
 The client requests coarse browser geolocation once and waits 350 ms after
 typing. Searches begin when the trimmed query has at least three characters.
-When coordinates are available, autocomplete uses a 25 km Google Places
-location bias and restaurant/food-place primary types, so generic brand names
-surface nearby branches first. This is a ranking bias rather than a geographic
-restriction: users can still type an area or city to find another location. If
-location access is denied, unavailable, or times out, autocomplete falls back
-to the existing worldwide search.
+When coordinates are available, autocomplete first uses a 50 km Google Places
+location restriction, an origin coordinate, and restaurant/food-place primary
+types. Predictions with provider distance are sorted nearest-first. If the
+restricted request returns no matching restaurant, the server performs one
+worldwide fallback request so users can still search another city. If location
+access is denied, unavailable, or times out, autocomplete uses the worldwide
+request directly.
 
 The suggestion list is bounded, scrollable, and may escape its decorative hero
 container so it is never clipped or obscures the selection flow on smaller
