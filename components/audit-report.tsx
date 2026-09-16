@@ -472,6 +472,20 @@ function reportBand(score:number|null|undefined,status?:string):ReportBand{
   return {label:'Critical',color:'#dc3b3b',tint:'#fdeaea',className:'band-red'}
 }
 function sectionScore(section:any){return typeof section?.score==='number'?Math.max(0,Math.min(100,section.score)):null}
+function revenueExposure(result:any){
+  const weights:Record<string,number>={websiteOrdering:.35,reputation:.20,retention:.20,measurement:.15,engagement:.10}
+  const scored=(result?.sections??[]).filter((section:any)=>sectionScore(section)!==null&&weights[section.key])
+  const totalWeight=scored.reduce((sum:number,section:any)=>sum+weights[section.key],0)
+  if(!scored.length||!totalWeight)return null
+  const weightedGap=scored.reduce((sum:number,section:any)=>sum+(100-Number(sectionScore(section)))*weights[section.key],0)/totalWeight
+  const midpoint=weightedGap*.30
+  const coverage=Math.max(0,Math.min(100,Number(result?.coverage)||70))
+  const uncertainty=4+(100-coverage)*.04
+  const roundFive=(value:number)=>Math.round(value/5)*5
+  const low=Math.max(0,Math.min(30,roundFive(midpoint-uncertainty)))
+  const high=Math.max(low+5,Math.min(35,roundFive(midpoint+uncertainty)))
+  return {low,high,weightedGap:Math.round(weightedGap)}
+}
 function ReportSectionHeading({eyebrow,title,detail}:{eyebrow:string;title:string;detail?:string}){
   return <div className="rr-section-head"><p>{eyebrow}</p><h2>{title}</h2>{detail&&<span>{detail}</span>}</div>
 }
@@ -563,7 +577,7 @@ function ReferenceChecklist({audit}:{audit:any}){
   const confirmed=items.filter(item=>item.state==='pass').length
   const attention=items.length-confirmed
   return <section className="rr-section">
-    <div className="rr-checklist-heading"><ReportSectionHeading eyebrow="Your direct-channel checklist" title="What’s in place, and what needs attention"/><div><strong>{confirmed}</strong><span>confirmed</span><b>{attention}</b><span>need attention</span></div></div>
+    <div className="rr-checklist-heading"><ReportSectionHeading eyebrow="Your direct-channel checklist" title="What’s in place, and what needs attention"/><div className="rr-checklist-stats"><div className="is-confirmed"><strong>{confirmed}</strong><span>Confirmed</span></div><div className="is-attention"><strong>{attention}</strong><span>Needs attention</span></div></div></div>
     <article className="rr-card rr-checklist-card">{groups.map(group=><div key={group.title}><h3>{group.title}</h3>{group.items.map(item=><ChecklistRow key={item.label} item={item}/>)}</div>)}</article>
   </section>
 }
@@ -584,6 +598,7 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
   const overall=reportBand(score)
   const sections=(r?.sections??[]).filter((section:any)=>sectionScore(section)!==null&&section.status!=='unknown')
   const chips=sections.slice().sort((a:any,b:any)=>Math.abs(Number(sectionScore(b))-50)-Math.abs(Number(sectionScore(a))-50)).slice(0,3)
+  const exposure=revenueExposure(r)
   return <main className="audit-reference">
     <div className="rr-wrap">
       <nav className="rr-nav"><a className="rr-brand" href="https://tossdown.com" target="_blank" rel="noopener noreferrer"><Image src="/tossdown-logo.png" alt="tossdown" width={414} height={79} priority/></a><button onClick={onReset}>New audit</button></nav>
@@ -595,8 +610,8 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
         </div>
         <div className="rr-gauge-wrap"><div className="rr-gauge" style={{background:`conic-gradient(${overall.color} ${score*3.6}deg,#efe6d5 0)`}}><div><strong>{score}</strong><span>/ 100</span></div></div><span style={{background:overall.tint,color:overall.color}}>{overall.label}</span></div>
       </section>
-      <section className="rr-opportunity"><Sparkles/><div><span>Highest-impact opportunity</span><strong>{sections.slice().sort((a:any,b:any)=>(sectionScore(a)??0)-(sectionScore(b)??0))[0]?.label||'Strengthen the growth engine'}</strong><small>{i?.primaryLeak||'Focus first on the lowest-scoring verified part of the customer journey.'}</small></div><a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer">See how to improve it <ArrowRight/></a></section>
-      <p className="rr-evidence-note">Built from the verified public signals in this audit. No illustrative revenue estimate is shown.</p>
+      <section className="rr-opportunity"><Sparkles/><div><span>{exposure?'Potential revenue exposure':'Highest-impact opportunity'}</span><strong>{exposure?`${exposure.low}–${exposure.high}% of revenue opportunity may be at risk`:sections.slice().sort((a:any,b:any)=>(sectionScore(a)??0)-(sectionScore(b)??0))[0]?.label||'Strengthen the growth engine'}</strong><small>{i?.primaryLeak||'Focus first on the lowest-scoring verified part of the customer journey.'}</small></div><a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer">See how to improve it <ArrowRight/></a></section>
+      <p className="rr-evidence-note">Directional range based on weighted, verified customer-journey gaps—not verified revenue or accounting data.</p>
       <ReferencePriorities interpretation={i}/>
       <ReferencePillars result={r}/>
       <ReferenceOrdering audit={audit}/>
