@@ -81,7 +81,7 @@ Complete report presentation layer. It translates normalized audit output into:
 - technical website intelligence
 - reviews, sentiment, themes, and response behavior
 
-The component deliberately hides many provider plumbing failures from the owner-facing narrative while lower-level diagnostics remain in the returned audit object. Its visual system uses a dark editorial hero, high-contrast score treatment, consistent rounded evidence cards, and a direct Tossdown handoff.
+The component deliberately hides many provider plumbing failures from the owner-facing narrative while lower-level diagnostics remain in the returned audit object. Its visual system follows the approved report reference: a warm cream canvas, an official Tossdown wordmark, a focused 880px reading column, white evidence cards with sand borders, a circular score treatment, dark featured insight panels, and Tossdown-pink action bands. All visible values continue to come from the real audit object; sample values from the design reference are never rendered as restaurant facts. Unsupported sections remain hidden rather than being filled with placeholder claims. Responsive grids collapse without horizontal overflow, and dense technical score groups become two columns on narrow screens.
 
 ## `components/google-analytics.tsx` and `lib/analytics.ts`
 

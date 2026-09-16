@@ -56,13 +56,14 @@ Every independent phase catches failure so one provider normally cannot collapse
 
 - merge/add Firestore lead
 - POST a configured webhook
-- upsert GoHighLevel contact
+- upsert GoHighLevel contact, including the restaurant company name, website,
+  and available structured address fields
 
 Failures are logged but the endpoint returns success so the audit is not blocked.
 
 ## `app/api/audits/route.ts`
 
-`POST`, Node.js. Rate-limited optional audit persistence. Generates `aud_` plus a ten-character safe ID, stores normalized audit/business/score/lead data, and returns a public URL. When Firebase is absent it returns a soft success with `persisted: false`.
+`POST`, Node.js. Rate-limited optional audit persistence. Generates `aud_` plus a ten-character safe ID, stores normalized audit/business/score/lead data, and returns a public URL on the canonical `https://growthaudit.tossdown.com` domain. Request or preview deployment hostnames are never written into CRM report links. When Firebase is absent it returns a soft success with `persisted: false`.
 
 ## `app/api/audits/[id]/route.ts`
 

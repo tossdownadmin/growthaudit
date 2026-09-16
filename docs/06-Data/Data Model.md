@@ -92,7 +92,10 @@ AI and fallback interpretations share an owner-facing shape including maturity s
 
 ### `leads/{submissionId}` or generated document
 
-Stores submitted lead properties plus source and capture timestamp. The second browser submission may merge `reportUrl` and `reportSummary` into the same document.
+Stores submitted lead properties plus source and capture timestamp. Both lead
+submissions include a normalized restaurant profile (`name`, `website`, and
+available address fields). The second browser submission merges the canonical
+main-domain `reportUrl` and `reportSummary` into the same document.
 
 ## Public projection
 

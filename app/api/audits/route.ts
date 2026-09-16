@@ -9,14 +9,7 @@ export const runtime = 'nodejs'
 // Same safe alphabet + length as the previous project.
 const newId = customAlphabet('23456789abcdefghijkmnpqrstuvwxyz', 10)
 
-function baseUrl(req: Request): string {
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '')
-  try {
-    return new URL(req.url).origin
-  } catch {
-    return ''
-  }
-}
+const PUBLIC_REPORT_ORIGIN = 'https://growthaudit.tossdown.com'
 
 // Persist a completed audit and mint a shareable /r/{id} link. Best-effort from
 // the client: if this fails the report still renders, only the share URL is lost.
@@ -62,7 +55,7 @@ export async function POST(req: Request) {
 
   try {
     await db().collection('audits').doc(id).set(doc)
-    const url = `${baseUrl(req)}/r/${id}`
+    const url = `${PUBLIC_REPORT_ORIGIN}/r/${id}`
     debugLog('audits', 'Audit persisted', { id })
     return NextResponse.json({ id, url })
   } catch (error) {

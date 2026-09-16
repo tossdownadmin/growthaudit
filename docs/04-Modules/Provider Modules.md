@@ -34,6 +34,9 @@ GoHighLevel lead adapter.
 - validates that private integration token and location ID exist
 - normalizes email, phone, and name fields
 - upserts a contact through LeadConnector
+- maps the audited restaurant to the standard company-name and website fields
+- maps available Google Places address components to the standard street, city,
+  state, postal-code, and country fields
 - attaches audit/source metadata where supported
 - returns `{ok,error}` without exposing credentials
 - `buildTopGaps` converts prioritized report actions into a compact CRM value

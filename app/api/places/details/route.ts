@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Place details are unavailable.' }, { status: 503 })
   }
   try {
-    const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}`, { headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'id,displayName,formattedAddress,location,websiteUri,googleMapsUri,rating,userRatingCount,types,primaryType,priceLevel,reviews,regularOpeningHours' } })
+    const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}`, { headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'id,displayName,formattedAddress,addressComponents,location,websiteUri,googleMapsUri,rating,userRatingCount,types,primaryType,priceLevel,reviews,regularOpeningHours' } })
     const data = await response.json().catch(() => ({}))
     if (!response.ok) {
       debugError('places.details', 'Google Places request failed', new Error(`HTTP ${response.status}`), { status: response.status, providerError: data?.error?.message, duration: elapsed(started) })
@@ -23,8 +23,18 @@ export async function GET(req: NextRequest) {
     const weekdayDescriptions: string[] = Array.isArray(data.regularOpeningHours?.weekdayDescriptions) ? data.regularOpeningHours.weekdayDescriptions : []
     const daysOpen = weekdayDescriptions.length ? weekdayDescriptions.filter((d: string) => !/closed/i.test(d)).length : null
     const openingHours = weekdayDescriptions.length ? { daysOpen, weekdayDescriptions } : null
+    const addressComponents: Array<{ longText?: string; shortText?: string; types?: string[] }> = Array.isArray(data.addressComponents) ? data.addressComponents : []
+    const component = (types: string[], preferShort = false) => {
+      const value = addressComponents.find((item) => types.some((type) => item.types?.includes(type)))
+      return (preferShort ? value?.shortText : value?.longText) || value?.longText || ''
+    }
+    const address1 = [component(['street_number']), component(['route'])].filter(Boolean).join(' ')
+    const city = component(['locality', 'postal_town', 'administrative_area_level_2'])
+    const state = component(['administrative_area_level_1'], true)
+    const postalCode = component(['postal_code'])
+    const country = component(['country'], true)
     debugLog('places.details', 'Request completed', { placeId: id, hasWebsite: Boolean(data.websiteUri), daysOpen, duration: elapsed(started) })
-    return NextResponse.json({ placeId: data.id, name: data.displayName?.text ?? '', address: data.formattedAddress ?? '', lat: data.location?.latitude, lng: data.location?.longitude, websiteUrl: data.websiteUri ?? '', googleWebsiteUrl: data.websiteUri ?? '', googleMapsUri: data.googleMapsUri ?? '', rating: data.rating ?? null, reviewCount: data.userRatingCount ?? null, types: data.types ?? [], primaryType: data.primaryType ?? '', priceLevel: data.priceLevel ?? null, reviews: data.reviews ?? [], openingHours, socials: {} })
+    return NextResponse.json({ placeId: data.id, name: data.displayName?.text ?? '', address: data.formattedAddress ?? '', address1, city, state, postalCode, country, lat: data.location?.latitude, lng: data.location?.longitude, websiteUrl: data.websiteUri ?? '', googleWebsiteUrl: data.websiteUri ?? '', googleMapsUri: data.googleMapsUri ?? '', rating: data.rating ?? null, reviewCount: data.userRatingCount ?? null, types: data.types ?? [], primaryType: data.primaryType ?? '', priceLevel: data.priceLevel ?? null, reviews: data.reviews ?? [], openingHours, socials: {} })
   } catch (error) {
     debugError('places.details', 'Unexpected request failure', error, { duration: elapsed(started) })
     return NextResponse.json({ error: 'Could not load this location.' }, { status: 502 })

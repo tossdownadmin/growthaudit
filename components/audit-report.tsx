@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { useState } from 'react'
 import { ArrowRight, BarChart3, Check, ExternalLink, FileSearch, Gauge, Link2, MapPin, MessageSquare, Minus, Monitor, Repeat2, Share2, ShoppingBag, Smartphone, Sparkles, Star, Store, TrendingUp, Users, X } from 'lucide-react'
 import { SiInstagram, SiFacebook, SiTiktok, SiYoutube, SiX, SiThreads, SiPinterest, SiSnapchat, SiWhatsapp } from 'react-icons/si'
@@ -440,7 +441,7 @@ function OwnerReportMap(){
     {href:'#evidence',label:'Technical proof',detail:'What supports the score',icon:<FileSearch className="h-4 w-4"/>},
   ]
   return <div className="my-6 grid gap-4">
-    <nav aria-label="Report sections" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{stops.map((stop,index)=><a key={stop.href} href={stop.href} className="surface-card group rounded-2xl bg-card p-4 hover:-translate-y-0.5 hover:border-primary"><div className="flex items-center justify-between"><span className="font-mono text-xs" style={{color:pink}}>0{index+1}</span><span className="text-muted-foreground group-hover:text-primary">{stop.icon}</span></div><p className="mt-4 text-sm font-semibold">{stop.label}</p><p className="mt-1 text-xs text-muted-foreground">{stop.detail}</p></a>)}</nav>
+    <nav aria-label="Report sections" className="grid gap-3 sm:grid-cols-3">{stops.map((stop,index)=><a key={stop.href} href={stop.href} className="surface-card group rounded-2xl bg-card p-4 hover:-translate-y-0.5 hover:border-primary"><div className="flex items-center justify-between"><span className="font-mono text-xs" style={{color:pink}}>0{index+1}</span><span className="text-muted-foreground group-hover:text-primary">{stop.icon}</span></div><p className="mt-4 text-sm font-semibold">{stop.label}</p><p className="mt-1 text-xs text-muted-foreground">{stop.detail}</p></a>)}</nav>
     <div className="grid gap-3 md:grid-cols-3">
       <ReportCTA title="Turn attention into orders" detail="Make your strongest demand channel easier to act on." href="https://tossdown.com/restaurant-website" compact />
       <ReportCTA title="Build the relationship" detail="Give repeat customers a direct path back to you." href="https://tossdown.com/crm-management" compact />
@@ -451,22 +452,36 @@ function OwnerReportMap(){
 
 function ReportCTA({title,detail,href,compact=false}:{title:string;detail:string;href:string;compact?:boolean}){return <a href={href} target="_blank" rel="noopener noreferrer" className={`group flex items-center justify-between gap-4 rounded-2xl px-5 py-5 text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl ${compact?'':'my-8'}`} style={{background:'linear-gradient(115deg, #e51451, #b90f43 58%, #771262)'}}><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-xs leading-5 text-white/80">{detail}</span></span><span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black shadow-md">Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/></span></a>}
 
+function ReportScore({score}:{score:number}){
+  const safe=Math.max(0,Math.min(100,Number(score)||0))
+  const color=growthScoreColor(safe)
+  return <div className="flex flex-col items-center rounded-2xl bg-[#241b16] px-7 py-6 text-white shadow-xl">
+    <div className="grid h-28 w-28 place-items-center rounded-full p-[9px]" style={{background:`conic-gradient(${color} ${safe*3.6}deg, rgba(255,255,255,.17) 0deg)`}}>
+      <div className="grid h-full w-full place-items-center rounded-full bg-[#241b16] text-center">
+        <div><div className="text-4xl font-bold leading-none tracking-[-0.06em]">{safe}</div><div className="mt-1 text-xs text-white/60">out of 100</div></div>
+      </div>
+    </div>
+    <p className="mt-4 text-center text-xs font-semibold uppercase tracking-[.12em] text-white/65">Growth Engine Score</p>
+  </div>
+}
+
 export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
   const r=audit.result
   const i=audit.interpretation
-  return <main className="min-h-screen">
-    <header className="brand-header mx-auto flex max-w-6xl items-center justify-between px-6 py-5"><a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="text-xl font-semibold tracking-[-0.04em] hover:opacity-75">tossdown<span style={{color:pink}}>.</span></a><div className="flex items-center gap-3"><a href="mailto:info@tossdown.com" className="hidden text-xs font-medium text-muted-foreground hover:text-foreground sm:block">info@tossdown.com</a><a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition-transform hover:-translate-y-0.5">Visit tossdown <ArrowRight className="ml-1 inline h-3.5 w-3.5"/></a><button onClick={onReset} className="rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:text-foreground">New audit</button></div></header>
-    <section className="mx-auto max-w-6xl px-6 pb-24 pt-10">
-      <div className="report-hero flex flex-col justify-between gap-8 p-7 md:flex-row md:items-end md:p-10">
-        <div>
+  return <main className="report-shell min-h-screen bg-[#fbf6ee] text-[#241b16]">
+    <header className="mx-auto flex max-w-[880px] items-center justify-between gap-4 px-5 py-5 sm:px-6">
+      <a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="shrink-0 hover:opacity-75"><Image src="/tossdown-logo.png" alt="tossdown" width={414} height={79} className="h-auto w-[106px] sm:w-[122px]" priority/></a>
+      <div className="flex items-center gap-2 sm:gap-3"><a href="mailto:info@tossdown.com" className="hidden text-xs font-medium text-muted-foreground hover:text-foreground md:block">info@tossdown.com</a><a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer" className="hidden rounded-full bg-[#241b16] px-4 py-2 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 sm:inline-flex">Talk to tossdown <ArrowRight className="ml-1 h-3.5 w-3.5"/></a><button onClick={onReset} className="rounded-full border border-[#ebe0ce] bg-white px-3 py-2 text-xs font-semibold text-[#7a6c5c] shadow-sm hover:text-[#241b16] sm:px-4">New audit</button></div>
+    </header>
+    <section className="mx-auto max-w-[880px] px-5 pb-24 pt-5 sm:px-6 sm:pt-8">
+      <div className="report-hero grid gap-7 p-6 sm:p-8 md:grid-cols-[1fr_180px] md:items-center md:p-10">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{color:pink}}>Restaurant growth audit</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-6xl">{audit.restaurant.name}</h1>
-          <p className="mt-3 flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" style={{color:pink}}/>{audit.restaurant.address}</p>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">How well your restaurant turns attention into direct orders, repeat customers, active relationships, and measurable growth.</p>
+          <h1 className="mt-4 break-words text-4xl font-bold tracking-[-0.055em] sm:text-5xl">{audit.restaurant.name}</h1>
+          <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-muted-foreground"><MapPin className="mt-1 h-4 w-4 shrink-0" style={{color:pink}}/><span>{audit.restaurant.address}</span></p>
+          <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">How well your restaurant turns attention into direct orders, repeat customers, active relationships, and measurable growth.</p>
         </div>
-        <div className="flex items-end gap-4">
-          <div className="rounded-3xl bg-foreground px-6 py-5 text-white shadow-2xl"><div className="text-7xl font-semibold leading-none tracking-[-0.08em]">{r.score}</div><div className="mt-2 text-sm text-white/65">Growth Engine Score · out of 100</div></div>
-        </div>
+        <ReportScore score={r.score}/>
       </div>
       <OwnerReportMap/>
       <div id="engine"><GrowthPillars result={r}/><ReportCTA title="See the growth engine clearly" detail="Talk with tossdown about the biggest scoring gap." href="https://tossdown.com/book-a-strategy-call"/><GrowthLeaks interpretation={i}/><ReportCTA title="Make the next move" detail="Turn this leak into a focused improvement plan." href="https://tossdown.com/book-a-strategy-call"/><WebsiteOrderingGrowth audit={audit}/><ReportCTA title="Own the next customer action" detail="Explore a stronger direct ordering path with tossdown." href="https://tossdown.com/restaurant-website"/></div>
@@ -481,6 +496,12 @@ export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
       <div className="mt-8"><PageSpeedPanel website={audit.website}/></div>
       <WebsiteIntelligence website={audit.website}/>
       <Checklist audit={audit}/>
+      <div className="mt-10 rounded-3xl bg-[#241b16] p-7 text-white sm:p-9">
+        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#f98aa7]">Your next move</p>
+        <h2 className="mt-3 text-3xl font-bold tracking-[-.045em]">Turn this audit into a practical growth plan.</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">Use the verified priorities above to focus first on the customer journey gaps with the clearest evidence.</p>
+        <a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#e51451] px-5 py-3 text-sm font-semibold text-white shadow-lg hover:-translate-y-0.5">Book a strategy call <ArrowRight className="h-4 w-4"/></a>
+      </div>
     </section>
   </main>
 }
@@ -539,7 +560,7 @@ function SocialActivity({social}:{social:any}){
 }
 function scoreColor(v:number|null|undefined){if(v===null||v===undefined)return 'var(--color-muted-foreground)';if(v>=90)return '#0f9d58';if(v>=50)return '#f4a400';return pink}
 function ScoreRing({value,label}:{value:number|null|undefined;label:string}){const pct=value??0;const color=scoreColor(value);return <div className="flex flex-col items-center gap-2"><div className="relative flex h-20 w-20 items-center justify-center rounded-full" style={{background:`conic-gradient(${color} ${pct*3.6}deg, var(--color-muted) 0deg)`}}><div className="flex h-15 w-15 items-center justify-center rounded-full bg-card" style={{height:'3.75rem',width:'3.75rem'}}><span className="text-lg font-semibold" style={{color}}>{value===null||value===undefined?'—':value}</span></div></div><span className="text-xs text-muted-foreground">{label}</span></div>}
-function DeviceCard({icon,title,run}:{icon:React.ReactNode;title:string;run:any}){if(!run)return null;const m=run.metrics??{};const field=run.fieldData?String(run.fieldData).replace('_',' ').toLowerCase():null;return <div className="rounded-2xl border border-border bg-card p-6"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2 font-medium">{icon}{title}</div>{field&&<span className="rounded-full bg-muted px-3 py-1 text-xs capitalize">Field: {field}</span>}</div><div className="mt-5 grid grid-cols-4 gap-2"><ScoreRing value={run.performance} label="Perf"/><ScoreRing value={run.accessibility} label="A11y"/><ScoreRing value={run.bestPractices} label="Best"/><ScoreRing value={run.seo} label="SEO"/></div><div className="mt-6 grid gap-2 text-sm">{[['Largest Contentful Paint',m.lcp?.display],['First Contentful Paint',m.fcp?.display],['Total Blocking Time',m.tbt?.display],['Cumulative Layout Shift',m.cls?.display],['Speed Index',m.speedIndex?.display],['Time to Interactive',m.tti?.display]].map(([label,value])=><div key={String(label)} className="flex items-center justify-between gap-4 border-b border-border pb-2 last:border-0"><span className="text-muted-foreground">{label}</span><span className="font-medium">{value||'—'}</span></div>)}</div>{run.opportunities?.length>0&&<div className="mt-5"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Top opportunities</p><ul className="mt-2 grid gap-1 text-sm">{run.opportunities.map((o:string)=><li key={o} className="text-muted-foreground">• {o}</li>)}</ul></div>}</div>}
+function DeviceCard({icon,title,run}:{icon:React.ReactNode;title:string;run:any}){if(!run)return null;const m=run.metrics??{};const field=run.fieldData?String(run.fieldData).replace('_',' ').toLowerCase():null;return <div className="min-w-0 rounded-2xl border border-border bg-card p-5 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2 font-medium">{icon}{title}</div>{field&&<span className="rounded-full bg-muted px-3 py-1 text-xs capitalize">Field: {field}</span>}</div><div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-2"><ScoreRing value={run.performance} label="Perf"/><ScoreRing value={run.accessibility} label="A11y"/><ScoreRing value={run.bestPractices} label="Best"/><ScoreRing value={run.seo} label="SEO"/></div><div className="mt-6 grid gap-2 text-sm">{[['Largest Contentful Paint',m.lcp?.display],['First Contentful Paint',m.fcp?.display],['Total Blocking Time',m.tbt?.display],['Cumulative Layout Shift',m.cls?.display],['Speed Index',m.speedIndex?.display],['Time to Interactive',m.tti?.display]].map(([label,value])=><div key={String(label)} className="flex items-center justify-between gap-4 border-b border-border pb-2 last:border-0"><span className="text-muted-foreground">{label}</span><span className="shrink-0 font-medium">{value||'—'}</span></div>)}</div>{run.opportunities?.length>0&&<div className="mt-5"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Top opportunities</p><ul className="mt-2 grid gap-1 text-sm">{run.opportunities.map((o:string)=><li key={o} className="text-muted-foreground">• {o}</li>)}</ul></div>}</div>}
 function PageSpeedPanel({website}:{website:any}){const ps=website?.pageSpeed;if(!ps||(!ps.mobile&&!ps.desktop))return null;return <section className="mb-10"><div className="mb-4 flex items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{color:pink}}>Google PageSpeed Insights</p><h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">Mobile vs desktop performance</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Real Lighthouse scores and Core Web Vitals measured by Google&apos;s headless Chrome, including field data from real Chrome users when available.</p></div></div>{ps.mobile&&ps.desktop
   ? <div className="grid items-start gap-4 md:grid-cols-2"><DeviceCard icon={<Smartphone className="h-4 w-4"/>} title="Mobile" run={ps.mobile}/><DeviceCard icon={<Monitor className="h-4 w-4"/>} title="Desktop" run={ps.desktop}/></div>
   : <div className="grid gap-4">{ps.mobile&&<DeviceCard icon={<Smartphone className="h-4 w-4"/>} title="Mobile" run={ps.mobile}/>}{ps.desktop&&<DeviceCard icon={<Monitor className="h-4 w-4"/>} title="Desktop" run={ps.desktop}/>}</div>}

@@ -17,6 +17,17 @@ type Lead = {
   role?: string
   reportUrl?: string
   reportSummary?: ReportSummary
+  profile?: {
+    placeId?: string
+    name?: string
+    website?: string
+    address?: string
+    address1?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+  }
 }
 
 export function ghlConfigured(): boolean {
@@ -32,6 +43,7 @@ export async function upsertGhlContact(lead: Lead): Promise<{ ok: boolean; error
   const lastName = parts.slice(1).join(' ')
 
   const rs: ReportSummary = lead.reportSummary || {}
+  const profile = lead.profile || {}
 
   // BARE custom field keys, NOT contact.* display keys. Do not invent field IDs.
   const cf: Array<{ key: string; field_value: string }> = []
@@ -50,6 +62,13 @@ export async function upsertGhlContact(lead: Lead): Promise<{ ok: boolean; error
     lastName,
     email: lead.email,
     phone: lead.phone,
+    companyName: profile.name || undefined,
+    website: profile.website || undefined,
+    address1: profile.address1 || profile.address || undefined,
+    city: profile.city || undefined,
+    state: profile.state || undefined,
+    postalCode: profile.postalCode || undefined,
+    country: profile.country || undefined,
     source: 'tossdown Audit',
     tags: ['Audit Tool'],
     customFields: cf,
