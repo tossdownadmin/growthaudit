@@ -14,6 +14,14 @@ Root application shell. It uses a resilient local system-font stack rather than 
 
 Main client-side controller and landing experience.
 
+The public landing page follows the warm Tossdown conversion layout supplied in
+the approved HTML reference: a cream background, minimal trust-led header,
+two-column search hero with an illustrative score preview, proof-stat strip,
+sample score cards, five audit-pillar cards, repeated final search CTA, and
+contact footer. Both search surfaces use the same Google Places state and feed
+the existing confirmation and audit workflow; the redesign does not alter
+provider, analytics, Clarity, persistence, or lead-submission behavior.
+
 Responsibilities:
 
 - debounced Google Places autocomplete
