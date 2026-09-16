@@ -55,9 +55,23 @@ Every independent phase catches failure so one provider normally cannot collapse
 `POST`, Node.js. Rate-limited lead capture with email validation and optional submit secret. Best-effort side effects:
 
 - merge/add Firestore lead
-- POST a configured webhook
+- render the approved Tossdown audit email from completed audit data when a
+  canonical report URL is available
+- POST a configured webhook with `renderedEmail.subject`,
+  `renderedEmail.html`, and `renderedEmail.text`
 - upsert GoHighLevel contact, including the restaurant company name, website,
   and available structured address fields
+
+The browser submits this route once after audit persistence, avoiding an early
+webhook call with a missing report URL. If persistence is unavailable, lead and
+CRM capture still run, but no report-ready email is rendered. HTML values are
+escaped server-side, and unsupported sample-only values such as a local rank
+are hidden unless the audit provides them.
+
+Before CRM upsert, the route also normalizes `reportSummary.topGaps` from the
+first three email opportunity strings when the client summary omits it. This
+ensures the existing GoHighLevel `audit_top_gaps` contact field is populated
+instead of resolving as an empty merge value in the email template.
 
 Failures are logged but the endpoint returns success so the audit is not blocked.
 

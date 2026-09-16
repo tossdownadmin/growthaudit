@@ -3,6 +3,7 @@ import { guard, bad } from '@/lib/http'
 import { db, firebaseConfigured } from '@/lib/firebase'
 import { upsertGhlContact } from '@/lib/ghl'
 import { debugLog, debugError } from '@/lib/debug'
+import { buildAuditEmail } from '@/lib/auditEmail'
 
 export const runtime = 'nodejs'
 
@@ -26,7 +27,27 @@ export async function POST(req: Request) {
   if (!lead.email || !EMAIL_RE.test(String(lead.email))) return bad('Valid email required')
 
   const submissionId = lead.submissionId ? String(lead.submissionId) : null
-  const payload = { ...lead, source: 'tdaudit', capturedAt: new Date().toISOString() }
+  const { emailTemplateData, ...persistedLead } = lead
+  const opportunities = Array.isArray(emailTemplateData?.opportunities)
+    ? emailTemplateData.opportunities.filter((value: unknown) => typeof value === 'string' && value.trim()).slice(0, 3)
+    : []
+  const reportSummary = {
+    ...persistedLead.reportSummary,
+    topGaps: persistedLead.reportSummary?.topGaps || opportunities.join(' · ') || undefined,
+  }
+  const normalizedLead = { ...persistedLead, reportSummary }
+  const payload = { ...normalizedLead, source: 'tdaudit', capturedAt: new Date().toISOString() }
+  const renderedEmail = buildAuditEmail({
+    recipientName: lead.name,
+    restaurantName: lead.profile?.name,
+    score: lead.reportSummary?.score,
+    rank: lead.reportSummary?.rank,
+    rating: lead.reportSummary?.rating,
+    reviews: lead.reportSummary?.reviews,
+    opportunities,
+    startHere: emailTemplateData?.startHere,
+    reportUrl: lead.reportUrl,
+  })
 
   // 1) Save/merge lead in Firestore (best-effort).
   if (firebaseConfigured()) {
@@ -50,7 +71,7 @@ export async function POST(req: Request) {
       await fetch(process.env.LEAD_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(renderedEmail ? { ...payload, renderedEmail } : payload),
       })
     } catch (error) {
       debugError('lead', 'Lead webhook failed (ignored)', error)
@@ -59,7 +80,7 @@ export async function POST(req: Request) {
 
   // 3) GHL upsert (best-effort). A GHL failure must NOT return 500.
   try {
-    const result = await upsertGhlContact(lead)
+    const result = await upsertGhlContact(normalizedLead)
     if (!result.ok && result.error !== 'not_configured') {
       debugError('lead', 'GHL upsert failed (ignored)', new Error(result.error || 'unknown'))
     } else if (result.ok) {

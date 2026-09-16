@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your restaurant growth audit is ready</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #efeae1; font-family: Arial, Helvetica, sans-serif; color: #241b16; padding: 36px 16px; }
+    .email { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 14px 36px -20px rgba(36, 27, 22, 0.28); }
+    .banner { background: linear-gradient(120deg, #e51451, #b80f40); padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; }
+    .banner img { display: block; height: 20px; width: auto; filter: brightness(0) invert(1); }
+    .banner span { color: #fbc7d6; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .body { padding: 32px 30px 8px; }
+    .greeting { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.25; }
+    .greeting b { color: #b80f40; }
+    .stat-card { margin-top: 24px; background: #241b16; border-radius: 14px; padding: 22px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; color: #ffffff; }
+    .stat-left span { display: block; font-size: 11px; letter-spacing: 0.06em; color: #c9bba9; text-transform: uppercase; font-weight: 700; }
+    .stat-left strong { font-size: 34px; font-weight: 800; }
+    .stat-left small { font-size: 16px; color: #c9bba9; font-weight: 600; }
+    .stat-right { text-align: right; font-size: 13px; color: #e4dbcb; }
+    .opps-label { margin-top: 26px; font-size: 12px; font-weight: 700; color: #6e6153; letter-spacing: 0.05em; text-transform: uppercase; }
+    .opp-row { margin-top: 10px; background: #fdeaf0; border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.5; }
+    .opp-icon { color: #b80f40; font-weight: 800; flex: none; }
+    .start-here { margin-top: 18px; background: #241b16; border-radius: 12px; padding: 16px 18px; color: #efe6d8; font-size: 14px; line-height: 1.55; }
+    .start-here b { color: #ffffff; }
+    .start-here span { color: #b8aa96; }
+    .cta-primary { display: block; text-align: center; margin: 26px 0 12px; background: #e51451; color: #ffffff !important; text-decoration: none; font-weight: 700; font-size: 16px; padding: 15px; border-radius: 12px; }
+    .cta-secondary { text-align: center; font-size: 14px; color: #6e6153; margin-bottom: 28px; }
+    .cta-secondary a { color: #b80f40 !important; font-weight: 700; text-decoration: none; }
+    .signoff { padding: 0 30px 26px; border-top: 1px solid #ebe0ce; margin-top: 6px; }
+    .signoff p { font-size: 14px; line-height: 1.6; color: #6e6153; margin-top: 20px; }
+    .signoff .sign { margin-top: 14px; font-size: 14px; color: #241b16; }
+    .signoff .sign b { display: block; }
+    .signoff .ps { margin-top: 16px; font-size: 13px; color: #6e6153; font-style: italic; }
+    .footer { padding: 20px 30px; background: #f7f1e6; text-align: center; font-size: 12px; color: #9c8e7c; line-height: 1.6; }
+    .footer a { color: #9c8e7c !important; }
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .email { border-radius: 0; }
+      .banner, .body, .signoff { padding-left: 20px; padding-right: 20px; }
+      .stat-right { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+    {{contact.company_name}} scored {{contact.audit_score}}/100. View the full restaurant growth audit.
+  </div>
+
+  <div class="email">
+    <div class="banner">
+      <img src="https://growthaudit.tossdown.com/tossdown-logo.png" alt="tossdown" />
+      <span>Restaurant Intelligence</span>
+    </div>
+
+    <div class="body">
+      <p class="greeting">Hey {{contact.first_name}}, <b>{{contact.company_name}}'s</b> audit is ready.</p>
+
+      <div class="stat-card">
+        <div class="stat-left">
+          <span>Digital Readiness</span>
+          <strong>{{contact.audit_score}}<small>/100</small></strong>
+        </div>
+        <div class="stat-right">{{contact.audit_rating}} ★ &nbsp;&middot;&nbsp; {{contact.audit_reviews}} reviews</div>
+      </div>
+
+      <p class="opps-label">Your biggest opportunities</p>
+      <div class="opp-row">
+        <span class="opp-icon">!</span>
+        <span>{{contact.audit_top_gaps}}</span>
+      </div>
+
+      <div class="start-here">
+        <b>Start here:</b> open the full report and begin with the first recommended action.
+        <span>Your complete plan is linked below.</span>
+      </div>
+
+      <a href="{{contact.audit_report_url}}" class="cta-primary">View your full report &rarr;</a>
+      <p class="cta-secondary">Prefer to talk? <a href="https://tossdown.com/book-a-strategy-call">Book a call &rarr;</a></p>
+    </div>
+
+    <div class="signoff">
+      <p>Built from {{contact.company_name}}'s own Google listing, website, and reviews.</p>
+      <div class="sign"><b>Shahzeb Rizvi</b>CEO - tossdown</div>
+      <p class="ps">P.S. Reply if anything looks off. I read these myself.</p>
+    </div>
+
+    <div class="footer">
+      You're receiving this because you ran a free audit at
+      <a href="https://growthaudit.tossdown.com">growthaudit.tossdown.com</a>.<br />
+      tossdown, one platform built for restaurants.
+    </div>
+  </div>
+</body>
+</html>

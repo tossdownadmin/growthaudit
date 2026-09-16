@@ -92,10 +92,19 @@ AI and fallback interpretations share an owner-facing shape including maturity s
 
 ### `leads/{submissionId}` or generated document
 
-Stores submitted lead properties plus source and capture timestamp. Both lead
-submissions include a normalized restaurant profile (`name`, `website`, and
-available address fields). The second browser submission merges the canonical
-main-domain `reportUrl` and `reportSummary` into the same document.
+Stores submitted lead properties plus source and capture timestamp. The final
+lead submission includes a normalized restaurant profile (`name`, `website`,
+and available address fields), canonical main-domain `reportUrl`, and
+`reportSummary`.
+
+The completed browser flow now makes one final lead submission after audit
+persistence. It includes `emailTemplateData` with up to three evidence-backed
+opportunities and one recommended first action. The API removes that transient
+input before Firestore persistence and uses it only to build the webhook email.
+The rendered webhook object is `renderedEmail` with `subject`, `html`, and
+`text`. Restaurant name, score, rating, review count, report URL, and all copy
+come from the completed audit; unavailable optional facts are omitted rather
+than replaced with sample values.
 
 ## Public projection
 
