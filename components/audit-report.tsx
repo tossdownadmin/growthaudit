@@ -465,44 +465,148 @@ function ReportScore({score}:{score:number}){
   </div>
 }
 
+type ReportBand={label:string;color:string;tint:string;className:string}
+function reportBand(score:number|null|undefined,status?:string):ReportBand{
+  if(status==='good'||Number(score)>=75)return {label:'Strong',color:'#1e9a56',tint:'#e8f6ee',className:'band-green'}
+  if(status==='warning'||Number(score)>=50)return {label:'Needs work',color:'#d9861f',tint:'#fff3df',className:'band-amber'}
+  return {label:'Critical',color:'#dc3b3b',tint:'#fdeaea',className:'band-red'}
+}
+function sectionScore(section:any){return typeof section?.score==='number'?Math.max(0,Math.min(100,section.score)):null}
+function ReportSectionHeading({eyebrow,title,detail}:{eyebrow:string;title:string;detail?:string}){
+  return <div className="rr-section-head"><p>{eyebrow}</p><h2>{title}</h2>{detail&&<span>{detail}</span>}</div>
+}
+function ReferenceCTA({title,href}:{title:string;href:string}){
+  return <div className="rr-cta-row"><a href={href} target="_blank" rel="noopener noreferrer">{title}<ArrowRight/></a></div>
+}
+function ReferencePillars({result}:{result:any}){
+  const sections=(result?.sections??[]).filter((section:any)=>section?.status!=='unknown'&&sectionScore(section)!==null)
+  if(!sections.length)return null
+  return <section className="rr-section">
+    <ReportSectionHeading eyebrow="Your growth engine" title="Where you’re strong, and where you’re losing customers" detail="Only areas supported by verified public evidence are scored."/>
+    <div className="rr-category-grid">{sections.map((section:any)=>{const score=sectionScore(section);const band=reportBand(score,section.status);return <article className={`rr-category-card ${band.className}`} key={section.key}>
+      <div className="rr-category-top"><div><span className="rr-category-icon">{growthIcon(section.key)}</span><h3>{section.label}</h3></div><div className="rr-category-score" style={{color:band.color}}><strong>{score}</strong><span>{band.label}</span></div></div>
+      <div className="rr-track"><i style={{width:`${score}%`,background:band.color}}/></div>
+      <p>{section.summary||section.detail}</p>
+    </article>})}</div>
+    <ReferenceCTA title="Explore the growth opportunity" href="https://tossdown.com/book-a-strategy-call"/>
+  </section>
+}
+function ReferenceOrdering({audit}:{audit:any}){
+  const paths=audit.website?.customerPaths??{}
+  const rows:Array<[string,boolean|undefined]>=[['Menu',paths.menu],['Reservations',paths.reservation],['Direct contact',paths.directContact],['Email capture',paths.emailCapture],['Loyalty / rewards',paths.loyalty],['Customer account',paths.account],['SMS / WhatsApp',paths.smsCapture||paths.whatsapp]]
+  const detected=rows.filter(([,value])=>value===true).length
+  const ordering=audit.website?.ordering
+  const summary=ordering?.summary||'The public ordering path could not be fully verified.'
+  return <section className="rr-section">
+    <ReportSectionHeading eyebrow="Website + ordering" title="Can a hungry customer become your customer?"/>
+    <article className="rr-card rr-featured">
+      <span className="rr-featured-label">Your core revenue channel</span>
+      <div className="rr-donut-row"><div className="rr-mini-donut" style={{background:`conic-gradient(#1e9a56 ${detected/rows.length*360}deg,#efe6d5 0)`}}><div><strong>{detected}/{rows.length}</strong><span>paths live</span></div></div><div><h3>{orderingStatusLabel(ordering?.status).label}</h3><p>{summary}</p>{ordering?.primaryUrl&&<a className="rr-inline-link" href={ordering.primaryUrl} target="_blank" rel="noopener noreferrer">Open detected order path <ExternalLink/></a>}</div></div>
+      <div className="rr-path-grid">{rows.map(([label,ok])=><div className={ok?'is-live':'is-missing'} key={label}>{ok?<Check/>:<X/>}<span>{label}</span><b>{ok?'Detected':'Not detected'}</b></div>)}</div>
+      <a className="rr-primary-button" href="https://tossdown.com/restaurant-website" target="_blank" rel="noopener noreferrer">Strengthen your direct ordering path <ArrowRight/></a>
+    </article>
+  </section>
+}
+function ReferenceReviews({reviews,interpretation}:{reviews:any;interpretation:any}){
+  const metrics=reviews?.metrics
+  const hasRating=reviews?.googleRating!==null&&reviews?.googleRating!==undefined
+  if(!hasRating&&!metrics)return null
+  const sample=Number(metrics?.sampleSize||0)
+  const deep=reviews?.source!=='google_places'&&sample>=10
+  const sentiment=deep&&metrics?.positiveRate!==null&&metrics?.positiveRate!==undefined
+  const response=deep&&reviews?.responseMeasured&&metrics?.overallResponseRate!==null&&metrics?.overallResponseRate!==undefined
+  const topics=reviews?.source==='outscraper'&&sample>=5&&Array.isArray(reviews?.topics)?reviews.topics.slice(0,7):[]
+  const maxMentions=Math.max(1,...topics.map((topic:any)=>Number(topic.mentions)||0))
+  return <section className="rr-section">
+    <ReportSectionHeading eyebrow="Customer voice" title="Are customers happy, and is management listening?" detail="Detailed sentiment and response statistics appear only when the review sample supports them."/>
+    <article className="rr-card">
+      <div className="rr-rating-row"><div><strong>{hasRating?reviews.googleRating:'—'}</strong><span>/ 5</span>{hasRating&&<StarRow rating={Number(reviews.googleRating)}/>}</div><p>{reviews.googleReviewCount!=null?`${Number(reviews.googleReviewCount).toLocaleString()} total Google reviews`:''}{deep?` · ${sample} recent reviews analyzed`:''}</p></div>
+      {sentiment&&<div className="rr-sentiment"><div><i style={{width:`${Math.round(metrics.positiveRate*100)}%`,background:'#1e9a56'}}/><i style={{width:`${Math.round((metrics.neutralRate||0)*100)}%`,background:'#d8cbb4'}}/><i style={{width:`${Math.round((metrics.negativeRate||0)*100)}%`,background:'#dc3b3b'}}/></div><p><span>Positive {Math.round(metrics.positiveRate*100)}%</span><span>Neutral {Math.round((metrics.neutralRate||0)*100)}%</span><span>Negative {Math.round((metrics.negativeRate||0)*100)}%</span></p></div>}
+      {response&&<div className="rr-stat-pair"><div><strong>{pct(metrics.overallResponseRate)}</strong><span>Owner response rate · {metrics.answeredReviews??0} of {sample} answered</span></div><div><strong>{metrics.negativeReviews===0?'No recent negatives':metrics.negativeReviews<3?'Small sample':pct(metrics.negativeResponseRate)??'—'}</strong><span>Negative-review response signal</span></div></div>}
+      {interpretation?.reviewRelationshipSummary&&deep&&<div className="rr-insight"><MessageSquare/><p>{interpretation.reviewRelationshipSummary}</p></div>}
+      {topics.length>0&&<div className="rr-topic-list"><h3>What customers repeatedly mention</h3>{topics.map((topic:any)=><div key={topic.topic}><span>{topic.topic}</span><i><b style={{width:`${Math.max(8,(Number(topic.mentions)||0)/maxMentions*100)}%`}}/></i><em>{topic.mentions||0}</em></div>)}</div>}
+    </article>
+    <ReferenceCTA title="Turn customer voice into action" href="https://tossdown.com/restaurant-social-media"/>
+  </section>
+}
+function ReferenceSocial({social}:{social:any}){
+  if(!social)return null
+  const profiles=(social.profiles??[]).filter((profile:any)=>profile.status!=='unavailable'&&Number(profile.evidenceConfidence||0)>=0.45&&profile.postsAnalyzed>=4)
+  const official=Object.entries(social.discovered??{}).filter(([,url])=>typeof url==='string'&&url) as Array<[string,string]>
+  if(!profiles.length&&!official.length)return null
+  const cards=profiles.length?profiles:official.map(([platform,url])=>({platform,url,status:'unavailable'}))
+  return <section className="rr-section">
+    <ReportSectionHeading eyebrow="Social activity + engagement" title="Is this an active customer relationship channel?" detail="Profile presence is separated from activity measurement so a provider gap never becomes a business claim."/>
+    <article className="rr-card"><div className="rr-social-grid">{cards.slice(0,4).map((profile:any)=>{const state=SOCIAL_STATUS[profile.status]??SOCIAL_STATUS.unavailable;return <a href={profile.url} target="_blank" rel="noopener noreferrer" key={`${profile.platform}-${profile.url}`}><div>{socialIcon(profile.platform)}<strong>{PLATFORM_LABEL[profile.platform]||profile.platform}</strong></div><span style={{color:state.color}}>{state.label}</span>{typeof profile.followers==='number'&&<b>{profile.followers.toLocaleString()} followers</b>}{typeof profile.daysSinceLastPost==='number'&&<em>Last observed {daysAgo(profile.daysSinceLastPost)}</em>}</a>})}</div></article>
+    <ReferenceCTA title="Keep customers connected" href="https://tossdown.com/crm-management"/>
+  </section>
+}
+function ReferenceTechnical({website}:{website:any}){
+  const runs=[website?.pageSpeed?.mobile,website?.pageSpeed?.desktop].filter(Boolean)
+  const metricRows=[['Largest Contentful Paint','lcp'],['First Contentful Paint','fcp'],['Total Blocking Time','tbt'],['Cumulative Layout Shift','cls'],['Speed Index','speedIndex']]
+  const verdicts=[['HTTPS',website?.https===true?'Pass':website?.https===false?'Needs attention':'Not measured'],['Performance',website?.performance!=null?`${website.performance}/100`:'Not measured'],['SEO',website?.seo!=null?`${website.seo}/100`:'Not measured'],['Server response',website?.responseMs?`${website.responseMs} ms`:'Not measured']]
+  if(!runs.length&&website?.reachable==null)return null
+  return <section className="rr-section">
+    <ReportSectionHeading eyebrow="Supporting technical evidence" title="The details behind the score" detail="These checks explain the diagnosis and stay secondary to the restaurant-owner questions above."/>
+    <article className="rr-card">
+      <div className="rr-verdict-grid">{verdicts.map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
+      {runs.length>0&&<div className="rr-tech-table"><div className="rr-tech-head"><span>Metric</span>{runs.map((run:any)=><b key={run.strategy}>{run.strategy}</b>)}</div>{metricRows.map(([label,key])=><div key={key}><span>{label}</span>{runs.map((run:any)=><b key={run.strategy}>{run.metrics?.[key]?.display||'—'}</b>)}</div>)}</div>}
+      <details className="rr-details"><summary>View measured page details</summary><div><p>HTML source: {website?.htmlSource||'not available'}</p><p>Final URL: {website?.finalUrl||'not available'}</p><p>Internal links: {website?.links?.internal??'—'}</p><p>Scripts: {website?.resources?.scripts??'—'}</p></div></details>
+    </article>
+    <ReferenceCTA title="Improve the website experience" href="https://tossdown.com/restaurant-website"/>
+  </section>
+}
+function ReferenceChecklist({audit}:{audit:any}){
+  const groups=buildChecklist(audit).map(group=>({...group,items:group.items.filter(item=>item.state!=='unknown')})).filter(group=>group.items.length)
+  const items=groups.flatMap(group=>group.items)
+  if(!items.length)return null
+  const confirmed=items.filter(item=>item.state==='pass').length
+  const attention=items.length-confirmed
+  return <section className="rr-section">
+    <div className="rr-checklist-heading"><ReportSectionHeading eyebrow="Your direct-channel checklist" title="What’s in place, and what needs attention"/><div><strong>{confirmed}</strong><span>confirmed</span><b>{attention}</b><span>need attention</span></div></div>
+    <article className="rr-card rr-checklist-card">{groups.map(group=><div key={group.title}><h3>{group.title}</h3>{group.items.map(item=><ChecklistRow key={item.label} item={item}/>)}</div>)}</article>
+  </section>
+}
+function ReferencePriorities({interpretation}:{interpretation:any}){
+  const priorities=(interpretation?.priorities??[]).map(priorityText).filter(Boolean).slice(0,3)
+  if(!interpretation?.primaryLeak&&!priorities.length)return null
+  return <>
+    {interpretation?.primaryLeak&&<div className="rr-leak"><Sparkles/><div><b>Biggest leak</b><p>{interpretation.primaryLeak}</p></div></div>}
+    {priorities.length>0&&<div className="rr-priorities">{priorities.map((priority:string,index:number)=><div key={`${index}-${priority}`}><span>{index+1}</span><p>{priority}</p></div>)}</div>}
+    <ReferenceCTA title="See how tossdown fixes this" href="https://tossdown.com/book-a-strategy-call"/>
+  </>
+}
+
 export function Report({audit,onReset}:{audit:any;onReset:()=>void}){
   const r=audit.result
   const i=audit.interpretation
-  return <main className="report-shell min-h-screen bg-[#fbf6ee] text-[#241b16]">
-    <header className="mx-auto flex max-w-[880px] items-center justify-between gap-4 px-5 py-5 sm:px-6">
-      <a href="https://tossdown.com" target="_blank" rel="noopener noreferrer" className="shrink-0 hover:opacity-75"><Image src="/tossdown-logo.png" alt="tossdown" width={414} height={79} className="h-auto w-[106px] sm:w-[122px]" priority/></a>
-      <div className="flex items-center gap-2 sm:gap-3"><a href="mailto:info@tossdown.com" className="hidden text-xs font-medium text-muted-foreground hover:text-foreground md:block">info@tossdown.com</a><a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer" className="hidden rounded-full bg-[#241b16] px-4 py-2 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 sm:inline-flex">Talk to tossdown <ArrowRight className="ml-1 h-3.5 w-3.5"/></a><button onClick={onReset} className="rounded-full border border-[#ebe0ce] bg-white px-3 py-2 text-xs font-semibold text-[#7a6c5c] shadow-sm hover:text-[#241b16] sm:px-4">New audit</button></div>
-    </header>
-    <section className="mx-auto max-w-[880px] px-5 pb-24 pt-5 sm:px-6 sm:pt-8">
-      <div className="report-hero grid gap-7 p-6 sm:p-8 md:grid-cols-[1fr_180px] md:items-center md:p-10">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{color:pink}}>Restaurant growth audit</p>
-          <h1 className="mt-4 break-words text-4xl font-bold tracking-[-0.055em] sm:text-5xl">{audit.restaurant.name}</h1>
-          <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-muted-foreground"><MapPin className="mt-1 h-4 w-4 shrink-0" style={{color:pink}}/><span>{audit.restaurant.address}</span></p>
-          <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">How well your restaurant turns attention into direct orders, repeat customers, active relationships, and measurable growth.</p>
+  const score=Number(r?.score)||0
+  const overall=reportBand(score)
+  const sections=(r?.sections??[]).filter((section:any)=>sectionScore(section)!==null&&section.status!=='unknown')
+  const chips=sections.slice().sort((a:any,b:any)=>Math.abs(Number(sectionScore(b))-50)-Math.abs(Number(sectionScore(a))-50)).slice(0,3)
+  return <main className="audit-reference">
+    <div className="rr-wrap">
+      <nav className="rr-nav"><a className="rr-brand" href="https://tossdown.com" target="_blank" rel="noopener noreferrer"><Image src="/tossdown-logo.png" alt="tossdown" width={414} height={79} priority/></a><button onClick={onReset}>New audit</button></nav>
+      <section className="rr-hero">
+        <div><span className="rr-eyebrow">Restaurant growth audit</span><h1>{audit.restaurant.name}</h1><p className="rr-address"><MapPin/>{audit.restaurant.address}</p><p className="rr-hero-desc">How well your restaurant turns attention into direct orders, repeat customers, active relationships, and measurable growth.</p>
+          {chips.length>0&&<div className="rr-chips">{chips.map((section:any)=>{const band=reportBand(sectionScore(section),section.status);return <span key={section.key} style={{background:band.tint,color:band.color}}><i style={{background:band.color}}/>{section.label}: {band.label}</span>})}</div>}
+          {i?.primaryLeak&&<p className="rr-loss-line">Biggest leak: {i.primaryLeak}</p>}
+          <a className="rr-primary-button" href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer">Get your fix plan, takes 2 minutes <ArrowRight/></a>
         </div>
-        <ReportScore score={r.score}/>
-      </div>
-      <OwnerReportMap/>
-      <div id="engine"><GrowthPillars result={r}/><ReportCTA title="See the growth engine clearly" detail="Talk with tossdown about the biggest scoring gap." href="https://tossdown.com/book-a-strategy-call"/><GrowthLeaks interpretation={i}/><ReportCTA title="Make the next move" detail="Turn this leak into a focused improvement plan." href="https://tossdown.com/book-a-strategy-call"/><WebsiteOrderingGrowth audit={audit}/><ReportCTA title="Own the next customer action" detail="Explore a stronger direct ordering path with tossdown." href="https://tossdown.com/restaurant-website"/></div>
-      <div id="voice"><ReviewsPanel reviews={audit.reviews} interpretation={i}/><ReportCTA title="Turn customer voice into action" detail="Use your review and social signals to improve retention." href="https://tossdown.com/restaurant-social-media"/><SocialActivity social={audit.social}/><ReportCTA title="Keep customers connected" detail="Build a customer relationship channel that compounds." href="https://tossdown.com/crm-management"/></div>
-      <GrowthEngineMap audit={audit}/>
-
-      <div id="evidence" className="border-t border-border pt-12">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{color:pink}}>Supporting technical evidence</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">The details behind the score</h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">These checks explain the diagnosis. They matter, but they are intentionally secondary to the restaurant-owner questions above.</p>
-      </div>
-      <div className="mt-8"><PageSpeedPanel website={audit.website}/></div>
-      <WebsiteIntelligence website={audit.website}/>
-      <Checklist audit={audit}/>
-      <div className="mt-10 rounded-3xl bg-[#241b16] p-7 text-white sm:p-9">
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#f98aa7]">Your next move</p>
-        <h2 className="mt-3 text-3xl font-bold tracking-[-.045em]">Turn this audit into a practical growth plan.</h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">Use the verified priorities above to focus first on the customer journey gaps with the clearest evidence.</p>
-        <a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#e51451] px-5 py-3 text-sm font-semibold text-white shadow-lg hover:-translate-y-0.5">Book a strategy call <ArrowRight className="h-4 w-4"/></a>
-      </div>
-    </section>
+        <div className="rr-gauge-wrap"><div className="rr-gauge" style={{background:`conic-gradient(${overall.color} ${score*3.6}deg,#efe6d5 0)`}}><div><strong>{score}</strong><span>/ 100</span></div></div><span style={{background:overall.tint,color:overall.color}}>{overall.label}</span></div>
+      </section>
+      <section className="rr-opportunity"><Sparkles/><div><span>Highest-impact opportunity</span><strong>{sections.slice().sort((a:any,b:any)=>(sectionScore(a)??0)-(sectionScore(b)??0))[0]?.label||'Strengthen the growth engine'}</strong><small>{i?.primaryLeak||'Focus first on the lowest-scoring verified part of the customer journey.'}</small></div><a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer">See how to improve it <ArrowRight/></a></section>
+      <p className="rr-evidence-note">Built from the verified public signals in this audit. No illustrative revenue estimate is shown.</p>
+      <ReferencePriorities interpretation={i}/>
+      <ReferencePillars result={r}/>
+      <ReferenceOrdering audit={audit}/>
+      <ReferenceReviews reviews={audit.reviews} interpretation={i}/>
+      <ReferenceSocial social={audit.social}/>
+      <ReferenceTechnical website={audit.website}/>
+      <ReferenceChecklist audit={audit}/>
+      <section className="rr-suggestions"><p>Your recommended actions</p><h2>Start with the changes most likely to improve the customer journey.</h2><div>{(i?.priorities??[]).map(priorityText).filter(Boolean).slice(0,4).map((priority:string,index:number)=><article key={`${index}-${priority}`}><span>{index+1}</span><p>{priority}</p></article>)}</div><a href="https://tossdown.com/book-a-strategy-call" target="_blank" rel="noopener noreferrer">Book a strategy call <ArrowRight/></a></section>
+      <footer className="rr-footer"><a href="https://tossdown.com">tossdown.com</a><a href="tel:+18552424254">+1 (855) 242-4254</a><a href="mailto:info@tossdown.com">info@tossdown.com</a></footer>
+    </div>
   </main>
 }
 const SOCIAL_STATUS:Record<string,{label:string;color:string;dot:string}>={active:{label:'Active',color:'#0f9d58',dot:'bg-success'},inconsistent:{label:'Inconsistent',color:'#f4a400',dot:'bg-warning'},dormant:{label:'Dormant',color:pink,dot:'bg-danger'},insufficient_data:{label:'Limited public sample',color:'var(--color-muted-foreground)',dot:'bg-muted-foreground'},unavailable:{label:'Profile found',color:'var(--color-muted-foreground)',dot:'bg-muted-foreground'}}
