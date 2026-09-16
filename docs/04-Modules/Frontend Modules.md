@@ -95,7 +95,7 @@ The root Clarity component validates `NEXT_PUBLIC_CLARITY_PROJECT_ID` and loads 
 
 The landing, audit-progress, and report shells use a consistent tossdown-branded header. The header renders the supplied official Tossdown wordmark asset rather than a text approximation. The wordmark and a visible “Visit tossdown” action both link to `https://tossdown.com`; the report also places contextual CTA rows after major growth-engine and customer-voice sections, plus the final handoff CTA. Report CTAs use one high-contrast Tossdown pink-gradient treatment and consistent vertical spacing so they remain visually separate from audit evidence.
 
-The public landing page keeps score cards and the five audit-pillar cards equal-height within each responsive row. On narrow screens, search controls, statistic grids, card grids, and footer contact links use explicit mobile layouts rather than relying on incidental wrapping.
+The public landing page keeps score cards and the five audit-pillar cards equal-height within each responsive row. On narrow screens, both restaurant search controls remain on one compact row with a shortened button label, while the footer contact links remain on one compact line. Statistic and card grids use explicit responsive layouts rather than relying on incidental wrapping.
 
 Report CTA destinations are contextual:
 
