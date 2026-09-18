@@ -2,12 +2,12 @@ import Script from 'next/script'
 
 const projectIdPattern = /^[a-z0-9]+$/i
 
-export function MicrosoftClarity({ projectId }: { projectId?: string }) {
+export function MicrosoftClarity({ projectId, enabled = false }: { projectId?: string; enabled?: boolean }) {
   const safeProjectId = projectId?.trim()
-  if (!safeProjectId || !projectIdPattern.test(safeProjectId)) return null
+  if (!enabled || !safeProjectId || !projectIdPattern.test(safeProjectId)) return null
 
   return (
-    <Script id="microsoft-clarity" strategy="afterInteractive">
+    <Script id="microsoft-clarity" strategy="lazyOnload">
       {`(function(c,l,a,r,i,t,y){
   c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
   t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
