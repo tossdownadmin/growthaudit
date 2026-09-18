@@ -13,9 +13,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <noscript><img height="1" width="1" style={{ display: 'none' }} src="https://www.facebook.com/tr?id=2061786917743035&ev=PageView&noscript=1" /></noscript>
       </body>
-      <Script id="meta-pixel" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: "!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');fbq('init', '2061786917743035');fbq('track', 'PageView');" }} />
+      <Script id="meta-pixel" strategy="lazyOnload">
+        {`window.fbq = window.fbq || function() {
+  window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments)
+};
+window.fbq.queue = window.fbq.queue || [];
+window.fbq('init', '2061786917743035');
+window.fbq('track', 'PageView');`}
+      </Script>
+      <Script id="meta-pixel-src" src="https://connect.facebook.net/en_US/fbevents.js" strategy="lazyOnload" />
       <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
-      <MicrosoftClarity projectId={process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID} />
+      <MicrosoftClarity projectId={process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID} enabled={process.env.NEXT_PUBLIC_ENABLE_CLARITY === 'true'} />
     </html>
   )
 }
