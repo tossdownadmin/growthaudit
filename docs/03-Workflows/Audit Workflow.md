@@ -27,8 +27,7 @@ sequenceDiagram
     Places-->>UI: identity and Google evidence
     UI->>Places: social discovery
     Places-->>UI: discovered profiles
-    Owner->>UI: Confirm and submit lead
-    UI-->>Audit: fire best-effort lead capture
+    Owner->>UI: Confirm restaurant and start audit
     UI->>Audit: POST restaurant evidence
     par Independent phases
       Audit->>Providers: PageSpeed mobile and desktop
@@ -41,11 +40,12 @@ sequenceDiagram
       Audit->>Providers: strategic interpretation
     end
     Audit-->>UI: report and diagnostics
-    UI->>Save: persist completed report
+    Owner->>UI: Submit valid lead form to unlock report
+    UI->>Save: persist completed report and lead
     opt Firebase configured
       Save->>DB: store audit and lead
       Save-->>UI: /r/{id}
-      UI-->>Audit: enrich lead with report URL and summary
+      UI-->>Audit: submit lead once with report URL and summary
     end
 ```
 
@@ -104,7 +104,12 @@ after the owner confirms the enriched restaurant details.
 
 ### 3. Lead lifecycle
 
-One `submissionId` is generated in the browser. A first best-effort lead request starts without waiting. After report persistence, a second request with the same ID merges the report URL and a compact summary into the lead record.
+One `submissionId` is generated in the browser after the lead form passes
+validation. The report unlocks immediately. The browser first attempts report
+persistence and then submits one best-effort lead request containing the report
+URL when persistence returned one, plus a compact audit summary. GA4
+`generate_lead` fires at validated UI submission; it does not confirm that
+persistence, Firestore, webhook, or CRM delivery succeeded.
 
 ### 4. Website inspection
 

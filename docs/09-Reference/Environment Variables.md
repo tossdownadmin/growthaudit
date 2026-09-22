@@ -47,6 +47,7 @@ Although `NEXT_PUBLIC_BASE_URL` is public by naming convention, it must contain 
 |---|---:|---|---|
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | No | root layout, client audit funnel | public GA4 Measurement ID beginning with `G-` |
 | `NEXT_PUBLIC_CLARITY_PROJECT_ID` | No | root layout | public Microsoft Clarity project ID |
+| `NEXT_PUBLIC_ENABLE_CLARITY` | No | root layout | must equal `true` for Clarity to render, even when the project ID is present |
 
 This is intentionally public: it is embedded in the Google tag delivered to visitors. It must not be confused with a Google API key, service account credential, or Google Ads conversion secret.
 
@@ -84,6 +85,7 @@ AI_MODEL=gpt-4o
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 NEXT_PUBLIC_GA_MEASUREMENT_ID=
 NEXT_PUBLIC_CLARITY_PROJECT_ID=
+NEXT_PUBLIC_ENABLE_CLARITY=false
 ```
 
 > [!danger]

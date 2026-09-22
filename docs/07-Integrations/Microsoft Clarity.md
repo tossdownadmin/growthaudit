@@ -15,9 +15,14 @@ Microsoft Clarity provides privacy-aware behavioral diagnostics such as session 
 
 ## Configuration
 
-Set `NEXT_PUBLIC_CLARITY_PROJECT_ID` to the Clarity project ID (`wrhaf3hh74`) in Vercel Preview and Production environments. The ID is a public browser identifier, not a secret. If it is absent or malformed, no Clarity script is rendered.
+Set `NEXT_PUBLIC_CLARITY_PROJECT_ID` to the Clarity project ID (`wrhaf3hh74`)
+and set `NEXT_PUBLIC_ENABLE_CLARITY=true` in each Vercel environment where
+recording is intended. The project ID is a public browser identifier, not a
+secret. If the ID is absent/malformed or the enable flag is not exactly `true`,
+no Clarity script is rendered.
 
-The script is mounted once in the root layout with Next.js `Script` using `afterInteractive`, so it does not block initial rendering.
+The script is mounted once in the root layout with Next.js `Script` using
+`lazyOnload`, so it does not block initial rendering.
 
 ## Privacy
 
@@ -26,9 +31,10 @@ Clarity masks sensitive content by default, but the audit must still avoid rende
 ## Verification
 
 1. Add `NEXT_PUBLIC_CLARITY_PROJECT_ID=wrhaf3hh74` to the target Vercel environment.
-2. Redeploy because `NEXT_PUBLIC_` values are embedded at build time.
-3. Open the deployed audit and confirm the Clarity network request in DevTools.
-4. After Clarity processing begins, verify the session appears in the Clarity project.
+2. Add `NEXT_PUBLIC_ENABLE_CLARITY=true` to the same environment.
+3. Redeploy because `NEXT_PUBLIC_` values are embedded at build time.
+4. Open the deployed audit and confirm the Clarity network request in DevTools.
+5. After Clarity processing begins, verify the session appears in the Clarity project.
 
 ## Related notes
 

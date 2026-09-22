@@ -20,6 +20,7 @@ This directory is an Obsidian-compatible knowledge base for the complete project
 ## Maps of content
 
 - [[01-Project/Project Overview|Project Overview]] — product, audience, capabilities, and boundaries
+- [[01-Project/Engineering Handover|Engineering Handover]] — complete starting guide for product, architecture, data, integrations, analytics, operations, and known risks
 - [[02-Architecture/Architecture Overview|Architecture Overview]] — system shape, components, and execution model
 - [[03-Workflows/Audit Workflow|Audit Workflow]] — end-to-end user and audit lifecycle
 - [[03-Workflows/Review Theme Intelligence|Review Theme Intelligence]] — approved rules for meaningful review themes
@@ -29,6 +30,7 @@ This directory is an Obsidian-compatible knowledge base for the complete project
 - [[06-Data/Data Model|Data Model]] — request, evidence, result, and persistence structures
 - [[07-Integrations/Integration Index|Integration Index]] — external providers and degradation behavior
 - [[07-Integrations/GA4 Analytics|GA4 Analytics]] — anonymous audit-funnel measurement and privacy rules
+- [[07-Integrations/Meta Pixel|Meta Pixel]] — repository PageView behavior and externally configured conversion events
 - [[07-Integrations/Microsoft Clarity|Microsoft Clarity]] — privacy-aware behavioral diagnostics
 - [[08-Operations/Local Development|Local Development]] — installation, configuration, and commands
 - [[08-Operations/Deployment|Deployment]] — Vercel deployment architecture and procedure
@@ -59,7 +61,8 @@ flowchart LR
 - Notes use YAML frontmatter, standard Markdown, Obsidian callouts, wiki-style internal links, and Mermaid.
 - `source` in frontmatter points to the implementing repository file.
 - A **map of content** (`moc`) is a navigation page, not an implementation module.
-- Facts in this vault describe the code on branch `feature/my-update` when generated.
+- Facts in this vault are maintained against repository `main`; the engineering
+  handover records the exact commit and verification date for its snapshot.
 - Existing root-level specifications remain source material; this vault provides the navigable canonical structure.
 
 ## Repository boundaries

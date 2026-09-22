@@ -16,10 +16,13 @@ status: maintained
 ## Install and configure
 
 ```bash
-git switch feature/my-update
+git switch -c codex/<approved-change-name>
 npm ci
 cp .env.example .env.local
 ```
+
+Use the team's approved feature-branch name. Do not work directly on `main` or
+push/deploy without explicit authorization.
 
 Populate at least:
 

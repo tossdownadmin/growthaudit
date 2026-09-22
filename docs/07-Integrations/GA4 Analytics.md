@@ -19,21 +19,29 @@ GA4 measures aggregate visitor behaviour and the public audit funnel. It does no
 
 Set `NEXT_PUBLIC_GA_MEASUREMENT_ID` to the GA4 web data-stream Measurement ID (`G-…`) in the relevant Vercel environments. It is a public browser identifier, not a secret. When it is absent or malformed, the application renders no Google tag and tracking calls are no-ops.
 
-The tag is mounted once in the root layout using Next.js `Script` with the `afterInteractive` strategy. This avoids delaying page hydration while still collecting page views across the application.
+The tag and initialization script are mounted once in the root layout using
+Next.js `Script` with the `lazyOnload` strategy. This avoids competing with the
+initial experience, but it creates an important measurement limitation:
+`trackAuditEvent` is a no-op until `window.gtag` exists, and the helper does not
+queue events that happen before the lazy script is ready.
 
 ## Funnel events
 
 | Event | Trigger | Allowed parameters |
 |---|---|---|
-| `restaurant_selected` | Google Place details and asset discovery have loaded | `restaurant_category`, `has_google_website` |
-| `audit_started` | a validated lead form starts the audit | `restaurant_category`, `has_website`, `social_profile_count` |
-| `generate_lead` | the validated lead form is submitted | `restaurant_category` |
+| `restaurant_selected` | Google Place details load; asset discovery then continues | `restaurant_category`, `has_google_website` |
+| `audit_started` | the visitor verifies restaurant details and starts the audit | `restaurant_category`, `has_website`, `social_profile_count` |
+| `generate_lead` | the lead form passes browser validation and invokes report unlock | `restaurant_category` |
 | `audit_completed` | the audit API returns successfully | `growth_score`, `evidence_coverage` |
 | `report_shared` | a saved report receives its share URL | `growth_score` |
 
 CTA links are external handoffs to tossdown.com and do not carry restaurant, report, or lead identifiers in their destination URL.
 
-`generate_lead` is the primary conversion candidate. Mark it as a GA4 Key Event after GA4 receives it. `audit_completed` may also be marked when audit completion is a useful marketing outcome.
+`generate_lead` is the primary conversion candidate. It does not confirm that
+`/api/audits`, `/api/lead`, Firestore, the webhook, or GoHighLevel succeeded;
+it currently records a validated UI submission. Mark it as a GA4 Key Event only
+with that semantic understood. `audit_completed` may also be marked when audit
+completion is a useful marketing outcome.
 
 ## Privacy boundary
 

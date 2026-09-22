@@ -18,6 +18,8 @@ status: maintained
 - logs report key presence/length rather than secret values
 - Firestore Admin is never imported into client components
 - GA4 event dispatch is limited to anonymous audit-funnel state; lead PII is excluded
+- repository-owned Meta Pixel code sends PageView only; externally configured
+  Meta events must be audited separately and must not include lead PII
 - Microsoft Clarity receives no custom lead, CRM, or report identifiers
 
 ## Reliability model
@@ -51,6 +53,11 @@ Firestore audit documents store lead details alongside reports. Public projectio
 The GA4 Measurement ID is public but analytics must remain optional. If visitors are subject to consent requirements, implement consent collection and Consent Mode before storing analytics cookies. Do not place lead or report identifiers in GA4 event data; see [[07-Integrations/GA4 Analytics|GA4 Analytics]].
 
 Clarity has its own masking and consent controls. Review them before marketing the audit in jurisdictions requiring consent; the application does not attach custom PII to Clarity.
+
+The repository initializes Meta Pixel without a code-level environment gate.
+Meta Events Manager can add automatic or Event Setup Tool behavior outside
+version control. Treat those rules as production configuration: document their
+owner and trigger, and retest them after button, form, or URL changes.
 
 ### Lead-submit secret and browser flow
 

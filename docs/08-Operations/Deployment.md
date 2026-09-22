@@ -52,7 +52,8 @@ Vercel installs dependencies with pnpm. Approved install scripts are kept in the
 6. Let Vercel build the Git commit.
 7. Run the production smoke test.
 
-This documentation change is intentionally local on `feature/my-update`; it does not authorize a push or deployment.
+Documentation or local verification does not authorize a push, merge, or
+deployment. Record those states separately in every handoff.
 
 ## Environment setup
 
@@ -60,7 +61,10 @@ Configure variables separately for Development, Preview, and Production. After t
 
 For GA4, set `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Production and, if preview-traffic measurement is desired, Preview. Because `NEXT_PUBLIC_` values are embedded at build time, redeploy after adding or changing it. See [[07-Integrations/GA4 Analytics|GA4 Analytics]].
 
-For Clarity, set `NEXT_PUBLIC_CLARITY_PROJECT_ID` (`wrhaf3hh74`) for Production and Preview as needed, then redeploy. See [[07-Integrations/Microsoft Clarity|Microsoft Clarity]].
+For Clarity, set `NEXT_PUBLIC_CLARITY_PROJECT_ID` (`wrhaf3hh74`) and
+`NEXT_PUBLIC_ENABLE_CLARITY=true` for each environment where recording is
+intended, then redeploy. See
+[[07-Integrations/Microsoft Clarity|Microsoft Clarity]].
 
 ## Health checks
 
@@ -70,6 +74,11 @@ For Clarity, set `NEXT_PUBLIC_CLARITY_PROJECT_ID` (`wrhaf3hh74`) for Production 
 - a complete audit returns provider diagnostics.
 - a known persisted `/r/{id}` renders with metadata.
 - GA4 Realtime/DebugView receives a page view and an anonymous audit-funnel event when GA4 is configured.
+- Meta Test Events receives the intended events exactly once; expand `Lead` to
+  verify whether its external rule represents a successful lead or only a
+  button interaction.
+- Clarity receives a test session only when both its project ID and enable flag
+  are configured.
 
 ## Rollback
 
