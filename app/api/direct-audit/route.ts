@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { inspectHtml, fetchPageSpeed, fetchWebsiteHtml, type RestaurantInput } from '@/lib/audit'
+import { inspectHtml, fetchPageSpeed, fetchWebsiteHtml, captureWebsiteSnapshot, type RestaurantInput } from '@/lib/audit'
 import { auditSocialProfiles, extractSocialLinks, scoreSocial, type DiscoveredSocials } from '@/lib/social'
 import { auditGoogleReviews, normalizeGooglePlacesReview, scoreReviewResponse, scoreSentiment, type ReviewAuditResult } from '@/lib/reviewAudit'
 import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
             finalUrl: fetched.finalUrl || input.websiteUrl,
             domainVerification: verifyWebsiteDomain(input.googleWebsiteUrl || input.websiteUrl, fetched.finalUrl || input.websiteUrl),
           }
+          website.snapshot = await captureWebsiteSnapshot(fetched.finalUrl || input.websiteUrl)
           debugLog('direct-audit.website', 'Website inspection completed', {
             status: fetched.statusCode,
             reachable: true,
