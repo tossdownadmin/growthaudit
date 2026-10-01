@@ -15,7 +15,7 @@ status: maintained
 | `OUTSCRAPER_API_KEY` | No | `lib/reviewAudit.ts` | recent reviews and owner responses |
 | `SOCIALCRAWL_API_KEY` | No | `lib/social.ts`, social diagnostics | social profile/post evidence |
 | `SERPAPI_API_KEY` | No | `lib/social.ts` | Google-result discovery for a missing website and official social profiles |
-| `BROWSERLESS_TOKEN` | No | `lib/audit.ts` | website HTML fallback |
+| `BROWSERLESS_TOKEN` | No | `lib/audit.ts` | website HTML fallback and UI snapshot capture |
 
 ## AI
 

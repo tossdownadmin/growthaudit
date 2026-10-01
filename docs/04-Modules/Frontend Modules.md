@@ -127,6 +127,10 @@ Report CTA destinations are contextual:
 The entry flow shows three lightweight steps (`Find`, `Verify & audit`, `View
 report`) and keeps website-required validation explicit. After URL verification,
 the audit progress animation replaces the form content inside the same card.
+During that audit, the same surface shows named checks and a website preview when
+the submitted site can be rendered. Domain ownership is called out separately
+from reachability so a live marketplace or third-party URL is not presented as
+the restaurant's branded domain.
 When complete, a blurred real-report preview sits behind a form labelled as a
 free-report handoff; the interface avoids lock/paywall language and explicitly
 states that no payment is required. GA4 and Clarity remain mounted at the root
@@ -142,6 +146,15 @@ Tailwind CSS 4 entry point and application theme. Defines the light palette, Tos
 - Any displayed Tossdown email address uses `info@tossdown.com`.
 
 ## Related notes
+
+### Landing page UI reference
+
+The landing page presentation in `app/page.tsx` follows the approved
+`Growth Audit Landing Page - v2.html` reference: centered hero search, three
+step labels, score preview cards, five audit-pillar cards, and the final
+business-performance CTA. This is a presentation-only boundary; restaurant
+search, asset discovery, audit execution, lead unlock, persistence, analytics,
+and report rendering remain owned by the existing workflow logic.
 
 - [[03-Workflows/Audit Workflow|Audit Workflow]]
 - [[06-Data/Data Model|Data Model]]

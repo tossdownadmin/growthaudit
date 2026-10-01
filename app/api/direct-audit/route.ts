@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { inspectHtml, fetchPageSpeed, fetchWebsiteHtml, type RestaurantInput } from '@/lib/audit'
+import { inspectHtml, fetchPageSpeed, fetchWebsiteHtml, captureWebsiteSnapshot, type RestaurantInput } from '@/lib/audit'
 import { auditSocialProfiles, extractSocialLinks, scoreSocial, type DiscoveredSocials } from '@/lib/social'
 import { auditGoogleReviews, normalizeGooglePlacesReview, scoreReviewResponse, scoreSentiment, type ReviewAuditResult } from '@/lib/reviewAudit'
 import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
@@ -9,6 +9,23 @@ import { callModel, aiConfigured, aiProvider } from '@/lib/aiClient'
 
 export const maxDuration = 120
 export const runtime = 'nodejs'
+
+function websiteHost(value: unknown): string | null {
+  try {
+    const url = new URL(/^https?:\/\//i.test(String(value || '')) ? String(value) : `https://${String(value || '')}`)
+    return url.hostname.replace(/^www\./i, '').toLowerCase() || null
+  } catch { return null }
+}
+
+function verifyWebsiteDomain(expected: unknown, inspected: unknown) {
+  const expectedHost = websiteHost(expected)
+  const inspectedHost = websiteHost(inspected)
+  if (!expectedHost && !inspectedHost) return {status: 'missing' as const, expectedHost, inspectedHost, message: 'No website domain was available to verify.'}
+  if (!inspectedHost) return {status: 'unverified' as const, expectedHost, inspectedHost, message: 'The website domain could not be verified.'}
+  if (!expectedHost) return {status: 'unverified' as const, expectedHost, inspectedHost, message: `The inspected site uses ${inspectedHost}, but no expected Google-linked domain was available for comparison.`}
+  if (expectedHost && (inspectedHost === expectedHost || inspectedHost.endsWith(`.${expectedHost}`))) return {status: 'branded' as const, expectedHost, inspectedHost, message: 'The inspected website stays on the restaurant\'s expected domain.'}
+  return {status: 'third_party' as const, expectedHost, inspectedHost, message: expectedHost ? `The inspected site uses ${inspectedHost}, not the expected ${expectedHost} domain.` : `The inspected site uses ${inspectedHost}; ownership was not independently confirmed.`}
+}
 
 // Walk the /v1/responses output array to recover text if output_text is absent.
 function extractResponseText(data: any): string | null {
@@ -91,7 +108,9 @@ export async function POST(req: NextRequest) {
             htmlSource: fetched.source,
             fetchError: null,
             finalUrl: fetched.finalUrl || input.websiteUrl,
+            domainVerification: verifyWebsiteDomain(input.googleWebsiteUrl || input.websiteUrl, fetched.finalUrl || input.websiteUrl),
           }
+          website.snapshot = await captureWebsiteSnapshot(fetched.finalUrl || input.websiteUrl)
           debugLog('direct-audit.website', 'Website inspection completed', {
             status: fetched.statusCode,
             reachable: true,
@@ -110,6 +129,7 @@ export async function POST(req: NextRequest) {
             fetchError: fetched.error,
             finalUrl: fetched.finalUrl || input.websiteUrl,
             https: (fetched.finalUrl || input.websiteUrl).startsWith('https://'),
+            domainVerification: verifyWebsiteDomain(input.googleWebsiteUrl || input.websiteUrl, fetched.finalUrl || input.websiteUrl),
           }
           debugError('direct-audit.website', 'Website HTML unavailable', new Error(fetched.error || 'HTML unavailable'), {
             url: input.websiteUrl,
