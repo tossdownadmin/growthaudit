@@ -123,10 +123,10 @@ function buildChecklist(audit:any):Array<{title:string;items:ChecklistItem[]}>{
 
   return [
     {title:'Website & online ordering',items:[
-      {label:'Website is live and reachable',state:website.reachable===true?'pass':website.reachable===false?'fail':'unknown',tip:'Make sure the domain resolves and returns a working page.'},
-      {label:'Served securely over HTTPS',state:boolState(website.https),tip:'Serve the whole site over HTTPS so customer data is protected.'},
-      {label:'Mobile experience is fast enough to convert',state:mobileSpeedState,tip:'Mobile speed needs attention. Reduce heavy scripts and large images so customers can reach menu and ordering faster.'},
-      {label:'Owned / branded ordering path',state:orderingState,tip:website.ordering?.status==='marketplace'?'Your visible order path hands the customer to a delivery marketplace. Add a branded/direct order path so more of the transaction and customer relationship stays with the restaurant.':'Strengthen the branded/direct order path from the website.'},
+      {label:'Your website opens for customers',state:website.reachable===true?'pass':website.reachable===false?'fail':'unknown',tip:'Make sure the domain resolves and returns a working page.'},
+      {label:'Your website is secure (HTTPS)',state:boolState(website.https),tip:'Serve the whole site over HTTPS so customer data is protected.'},
+      {label:'Your site loads quickly on phones',state:mobileSpeedState,tip:'Reduce heavy scripts and large images so customers can reach the menu and ordering faster.'},
+      {label:'Customers can order through your brand',state:orderingState,tip:website.ordering?.status==='marketplace'?'The visible order path sends customers to a delivery marketplace. Add a branded/direct path so more of the transaction and customer relationship stays with the restaurant.':'Make the branded/direct order path obvious from the website.'},
     ]},
     {title:'Get found on Google',items:[
       {label:'Page title set',state:metaState(meta.title,checks.documentTitle),tip:'Add a clear page title so your listing reads correctly in search results.'},
@@ -135,14 +135,14 @@ function buildChecklist(audit:any):Array<{title:string;items:ChecklistItem[]}>{
       {label:'Link preview image (Open Graph)',state:meta.ogImage?'pass':htmlAvailable?'fail':'unknown',tip:'Add an Open Graph image so shared links present the brand professionally.'},
     ]},
     {title:'Profile consistency',items:[
-      {label:'Google profile links to your own website',state:gmbUrl?(isProperWebsite(gmbUrl)?'pass':'fail'):'fail',tip:gmbUrl?`Your Google Business Profile points to ${gmbHost||'a third-party link'} instead of your own website. Replace it with the restaurant website so customers land on a channel you control.`:independentlyVerifiedWebsite?`We verified ${independentlyVerifiedWebsite.url} as the restaurant website, but it is missing from Google Business Profile. Add this exact website to Google so search customers reach your owned destination.`:'Add the restaurant website to Google Business Profile.'},
+      {label:'Google sends customers to your branded website',state:gmbUrl?(isProperWebsite(gmbUrl)?'pass':'fail'):'fail',tip:gmbUrl?`Google currently points to ${gmbHost||'a third-party link'} instead of your own website. Replace it so customers land on a channel you control.`:independentlyVerifiedWebsite?`We verified ${independentlyVerifiedWebsite.url} as the restaurant website, but it is missing from Google Business Profile. Add this exact website to Google.`:'Add the restaurant website to Google Business Profile.'},
       {label:'Social bios route customers to your website',state:bioLinkState,tip:missingBioChannels.length?`Add your website link to ${missingBioChannels.join(', ')} so social attention can turn into direct visits and orders.`:'Point active social audiences toward your owned website or direct ordering path.'},
       {label:'Opening hours match Google & website',state:hoursState,tip:(gmbDays!=null&&siteHours)?`Google shows ${gmbDays} open day${gmbDays===1?'':'s'} while the website publishes ${siteHours.days}. Align them so customers see one source of truth.`:'Publish opening hours in structured website data so they can be verified against Google.'},
     ]},
     {title:'Reviews & reputation',items:[
-      {label:'Google reputation established',state:reviews.googleRating!=null?'pass':'unknown',tip:'Build consistent Google review volume so customers have current proof before choosing where to eat.'},
-      {label:'Owner replies to recent reviews',state:responseState,tip:'Respond consistently to reviews so customers see that management is listening.'},
-      {label:'Negative reviews are actively recovered',state:negativeResponseState,tip:'Respond to unhappy customers quickly and provide a clear recovery path.'},
+      {label:'Customers can see your Google reputation',state:reviews.googleRating!=null?'pass':'unknown',tip:'Build consistent Google review volume so customers have current proof before choosing where to eat.'},
+      {label:'Your team replies to recent reviews',state:responseState,tip:'Respond consistently so customers see that management is listening.'},
+      {label:'Unhappy customers receive a response',state:negativeResponseState,tip:'Respond to unhappy customers quickly and provide a clear recovery path.'},
     ]},
     {title:'Social engagement',items:[
       {label:'At least one actively maintained public social channel',state:socialActivityState,tip:'Keep at least one customer-relevant social channel consistently active; you do not need to be everywhere.'},
@@ -560,8 +560,11 @@ function ReferenceTechnical({website}:{website:any}){
   const metricRows=[['Largest Contentful Paint','lcp'],['First Contentful Paint','fcp'],['Total Blocking Time','tbt'],['Cumulative Layout Shift','cls'],['Speed Index','speedIndex']]
   const verdicts=[['HTTPS',website?.https===true?'Pass':website?.https===false?'Needs attention':'Not measured'],['Performance',website?.performance!=null?`${website.performance}/100`:'Not measured'],['SEO',website?.seo!=null?`${website.seo}/100`:'Not measured'],['Server response',website?.responseMs?`${website.responseMs} ms`:'Not measured']]
   if(!runs.length&&website?.reachable==null)return null
+  const domain=website?.domainVerification
   return <section className="rr-section">
     <ReportSectionHeading eyebrow="Supporting technical evidence" title="The details behind the score" detail="These checks explain the diagnosis and stay secondary to the restaurant-owner questions above."/>
+    {domain&&<div className={`mb-4 rounded-2xl border p-5 ${domain.status==='branded'?'border-success/30 bg-success/5':domain.status==='third_party'?'border-danger/30 bg-danger/5':'border-warning/30 bg-warning/5'}`}><p className="text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">Domain verification</p><p className="mt-2 font-medium">{domain.status==='branded'?'Branded domain confirmed':domain.status==='third_party'?'Third-party or non-branded domain detected':'Domain ownership could not be confirmed'}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{domain.message}</p></div>}
+    {website?.snapshot?.dataUrl&&<div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card"><div className="border-b border-border px-5 py-3 text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">Website UI snapshot</div><img src={website.snapshot.dataUrl} alt="Captured preview of the audited restaurant website" className="max-h-[420px] w-full object-cover object-top"/><p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">Captured from the public website during the audit.</p></div>}
     <article className="rr-card">
       <div className="rr-verdict-grid">{verdicts.map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
       {runs.length>0&&<div className="rr-tech-table"><div className="rr-tech-head"><span>Metric</span>{runs.map((run:any)=><b key={run.strategy}>{run.strategy}</b>)}</div>{metricRows.map(([label,key])=><div key={key}><span>{label}</span>{runs.map((run:any)=><b key={run.strategy}>{run.metrics?.[key]?.display||'—'}</b>)}</div>)}</div>}

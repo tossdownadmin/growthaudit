@@ -2,7 +2,7 @@ import * as cheerio from "cheerio"
 
 export type AuditSection = { key: string; label: string; earned: number | null; max: number; status: 'good' | 'warning' | 'bad' | 'unknown'; detail: string; evidence?: string[] }
 export type GmbOpeningHours = { daysOpen: number | null; weekdayDescriptions: string[] }
-export type RestaurantInput = { placeId: string; name: string; address: string; websiteUrl: string; googleWebsiteUrl?: string; lat?: number; lng?: number; rating?: number | null; reviewCount?: number | null; reviews?: any[]; openingHours?: GmbOpeningHours | null; socials: { instagram?: string; facebook?: string; tiktok?: string; youtube?: string; twitter?: string; threads?: string; linkedin?: string; pinterest?: string; snapchat?: string; whatsapp?: string } }
+export type RestaurantInput = { placeId: string; name: string; address: string; phone?: string; websiteUrl: string; googleWebsiteUrl?: string; lat?: number; lng?: number; rating?: number | null; reviewCount?: number | null; reviews?: any[]; openingHours?: GmbOpeningHours | null; socials: { instagram?: string; facebook?: string; tiktok?: string; youtube?: string; twitter?: string; threads?: string; linkedin?: string; pinterest?: string; snapchat?: string; whatsapp?: string } }
 export type SocialScoreInput = { earned: number | null; max: number; status: 'good' | 'warning' | 'bad' | 'unknown'; detail: string; evidence?: string[] } | null
 export type SectionScoreInput = { earned: number | null; max: number; status: 'good' | 'warning' | 'bad' | 'unknown'; detail: string; evidence?: string[] } | null
 export type WebsiteInspection = {
@@ -51,6 +51,13 @@ export type WebsiteInspection = {
   htmlSource?: 'direct' | 'browserless' | 'none'
   fetchError?: string | null
   finalUrl?: string | null
+  domainVerification?: {
+    status: 'branded' | 'third_party' | 'missing' | 'unverified'
+    expectedHost: string | null
+    inspectedHost: string | null
+    message: string
+  }
+  snapshot?: { dataUrl: string; source: 'browserless'; capturedAt: string } | null
   metaTags: {
     title: string | null
     description: string | null
@@ -387,6 +394,29 @@ export async function fetchWebsiteHtml(url: string): Promise<WebsiteHtmlFetch> {
       contentBytes: null,
       error: error?.message || directError || 'Rendered HTML fetch failed',
     }
+  }
+}
+
+export async function captureWebsiteSnapshot(url: string): Promise<WebsiteInspection['snapshot']> {
+  const token = process.env.BROWSERLESS_TOKEN || ''
+  const normalized = normalizeWebsiteUrl(url)
+  if (!token || !normalized) return null
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 20000)
+    const endpoint = new URL('https://production-sfo.browserless.io/screenshot')
+    endpoint.searchParams.set('token', token)
+    const response = await fetch(endpoint.toString(), {
+      method: 'POST', signal: controller.signal, cache: 'no-store',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url: normalized, options: {type: 'jpeg', quality: 72, fullPage: false}}),
+    }).finally(() => clearTimeout(timer))
+    if (!response.ok) return null
+    const bytes = Buffer.from(await response.arrayBuffer())
+    if (!bytes.length) return null
+    return {dataUrl: `data:image/jpeg;base64,${bytes.toString('base64')}`, source: 'browserless', capturedAt: new Date().toISOString()}
+  } catch {
+    return null
   }
 }
 
