@@ -402,7 +402,7 @@ export async function capturePublicPage(url: string, viewport = {width: 390, hei
   try {
     const endpoint = new URL('https://production-sfo.browserless.io/screenshot')
     endpoint.searchParams.set('token', token)
-    const response = await fetch(endpoint, {method:'POST',signal:AbortSignal.timeout(18000),headers:{'Content-Type':'application/json'},body:JSON.stringify({url,options:{type:'jpeg',quality:68,fullPage:false,viewport}})})
+    const response = await fetch(endpoint, {method:'POST',signal:AbortSignal.timeout(18000),headers:{'Content-Type':'application/json'},body:JSON.stringify({url,viewport,options:{type:'jpeg',quality:68,fullPage:false}})})
     if (!response.ok) return null
     const bytes = Buffer.from(await response.arrayBuffer())
     return bytes.length ? `data:image/jpeg;base64,${bytes.toString('base64')}` : null

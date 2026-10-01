@@ -149,6 +149,10 @@ The report renders immediately. It groups findings into owner decisions—growth
 
 ## Related notes
 
+### Live preview reliability (2026-10-01)
+
+Website, map, and social previews have separate pending, ready, and unavailable states. A failed capture must stop its spinner and show the confirmed source link; image errors must render a replacement card, never hide the panel. Reviews continue to show the real supplied review sample. Previews do not affect scoring. Browserless uses a top-level viewport and image-only screenshot options. Map images are fetched and validated server-side so provider errors and keys are not returned as image URLs. Preview diagnostics record status codes without credentials. A successful typecheck alone does not establish that external capture works; deployment verification must inspect the returned image or provider failure.
+
 - [[05-APIs/API Index|API Index]]
 - [[06-Data/Data Model|Data Model]]
 - [[07-Integrations/Integration Index|Integration Index]]
