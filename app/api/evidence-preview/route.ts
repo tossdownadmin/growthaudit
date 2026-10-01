@@ -5,13 +5,13 @@ import net from 'node:net'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-async function capture(url: string, token: string) {
+async function capture(url: string, token: string, social = false) {
   if (!token) return { image: null, status: 'not_configured' }
   if (!(await isSafePublicUrl(url))) return { image: null, status: 'invalid_url' }
   try {
     const endpoint = new URL('https://production-sfo.browserless.io/screenshot')
     endpoint.searchParams.set('token', token)
-    const response = await fetch(endpoint, {method:'POST',signal:AbortSignal.timeout(25000),headers:{'Content-Type':'application/json'},body:JSON.stringify({url,viewport:{width:390,height:844,isMobile:true,deviceScaleFactor:1},options:{type:'jpeg',quality:68,fullPage:false},gotoOptions:{waitUntil:'domcontentloaded',timeout:15000},waitForTimeout:4000})})
+    const response = await fetch(endpoint, {method:'POST',signal:AbortSignal.timeout(25000),headers:{'Content-Type':'application/json'},body:JSON.stringify({url,viewport:{width:390,height:844,isMobile:true,deviceScaleFactor:1},options:{type:'jpeg',quality:68,fullPage:false},gotoOptions:{waitUntil:'domcontentloaded',timeout:15000},waitForTimeout:4000,...(social?{waitForFunction:{fn:'() => !/accounts\\/login/.test(location.href) && !document.querySelector(\'input[type="password"]\') && document.querySelectorAll("img").length >= 3',timeout:8000}}:{})})})
     if (!response.ok) {
       console.warn('[evidence-preview] Screenshot provider rejected capture', {status:response.status})
       return {image:null,status:`provider_${response.status}`}
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}))
   if (!body || typeof body !== 'object') return NextResponse.json({error:'Invalid request'}, {status:400})
   if (body.kind === 'website' || body.kind === 'social') {
-    return NextResponse.json(typeof body.url === 'string' ? await capture(body.url, process.env.BROWSERLESS_TOKEN || '') : {image:null,status:'missing_url'})
+    return NextResponse.json(typeof body.url === 'string' ? await capture(body.url, process.env.BROWSERLESS_TOKEN || '', body.kind === 'social') : {image:null,status:'missing_url'})
   }
   if (body.kind === 'map') {
     const key = process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_PLACES_API_KEY
