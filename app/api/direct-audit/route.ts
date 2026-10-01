@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { inspectHtml, fetchPageSpeed, fetchWebsiteHtml, type RestaurantInput } from '@/lib/audit'
+import { inspectHtml, fetchPageSpeed, fetchWebsiteHtml, capturePublicPage, type RestaurantInput } from '@/lib/audit'
 import { auditSocialProfiles, extractSocialLinks, scoreSocial, type DiscoveredSocials } from '@/lib/social'
 import { auditGoogleReviews, normalizeGooglePlacesReview, scoreReviewResponse, scoreSentiment, type ReviewAuditResult } from '@/lib/reviewAudit'
 import { debugError, debugLog, elapsed, startedAt } from '@/lib/debug'
@@ -197,6 +197,19 @@ export async function POST(req: NextRequest) {
       }
     })()
 
+    const visualEvidencePhase = (async () => {
+      const urls = Object.values(input.socials || {}).filter((value): value is string => typeof value === 'string' && /^https?:\/\//i.test(value)).slice(0, 3)
+      const [websiteSnapshot, ...socialSnapshots] = await Promise.all([
+        input.websiteUrl ? capturePublicPage(input.websiteUrl) : Promise.resolve(null),
+        ...urls.map(url => capturePublicPage(url)),
+      ])
+      const mapKey = process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_PLACES_API_KEY || ''
+      const map = mapKey && Number.isFinite(Number(input.lat)) && Number.isFinite(Number(input.lng))
+        ? `https://maps.googleapis.com/maps/api/staticmap?center=${input.lat},${input.lng}&zoom=13&size=720x420&scale=2&maptype=roadmap&markers=color:red%7C${input.lat},${input.lng}&key=${encodeURIComponent(mapKey)}`
+        : null
+      return {websiteSnapshot, socialSnapshots, map}
+    })()
+
     const benchmarkPhase = (async (): Promise<CompetitorBenchmark> => {
       try {
         const benchmarkStarted = Date.now()
@@ -261,14 +274,14 @@ export async function POST(req: NextRequest) {
       }
     })()
 
-    const [, social, review, benchmark] = await Promise.all([pageSpeedPhase, socialPhase, reviewPhase, benchmarkPhase])
+    const [, social, review, benchmark, visualEvidence] = await Promise.all([pageSpeedPhase, socialPhase, reviewPhase, benchmarkPhase, visualEvidencePhase])
 
     const socialSection = scoreSocial({ ...discoveredSocials, ...confirmedSocials }, social.profiles)
     const reviewResponseSection = scoreReviewResponse(review)
     const sentimentSection = scoreSentiment(review)
     const result = scoreGrowthEngine({
       input,
-      website,
+      website: {...website, snapshot: visualEvidence.websiteSnapshot, mapSnapshot: visualEvidence.map},
       socialSection,
       reviewResponseSection,
       sentimentSection,
@@ -426,6 +439,7 @@ export async function POST(req: NextRequest) {
         configured: social.configured,
         discovered: social.discovered,
         profiles: social.profiles,
+        snapshots: visualEvidence.socialSnapshots,
         brandAssets: (input as any).brandAssets ?? [],
         // Runtime diagnostics so the deployed report can explain itself without
         // a separate endpoint. keyPresent reflects the ACTUAL runtime env of the

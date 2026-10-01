@@ -11,11 +11,11 @@ status: maintained
 | Variable | Required | Used by | Purpose |
 |---|---:|---|---|
 | `GOOGLE_PLACES_API_KEY` | Yes for core flow | Places routes, PageSpeed, benchmarks | Google Places (New) and PageSpeed key |
-| `GOOGLE_MAPS_API_KEY` | Alias only | `lib/google.ts` | Compatibility alias for competitor Google wrapper |
+| `GOOGLE_MAPS_API_KEY` | Optional | `lib/google.ts`, `app/api/direct-audit/route.ts` | Compatibility alias and static local-market map preview |
 | `OUTSCRAPER_API_KEY` | No | `lib/reviewAudit.ts` | recent reviews and owner responses |
 | `SOCIALCRAWL_API_KEY` | No | `lib/social.ts`, social diagnostics | social profile/post evidence |
 | `SERPAPI_API_KEY` | No | `lib/social.ts` | Google-result discovery for a missing website and official social profiles |
-| `BROWSERLESS_TOKEN` | No | `lib/audit.ts` | website HTML fallback and UI snapshot capture |
+| `BROWSERLESS_TOKEN` | No | `lib/audit.ts`, `app/api/direct-audit/route.ts` | website HTML fallback and public mobile/social preview capture |
 
 ## AI
 

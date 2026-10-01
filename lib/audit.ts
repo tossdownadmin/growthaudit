@@ -396,6 +396,19 @@ export async function fetchWebsiteHtml(url: string): Promise<WebsiteHtmlFetch> {
   }
 }
 
+export async function capturePublicPage(url: string, viewport = {width: 390, height: 844}): Promise<string | null> {
+  const token = process.env.BROWSERLESS_TOKEN || ''
+  if (!token || !/^https?:\/\//i.test(url)) return null
+  try {
+    const endpoint = new URL('https://production-sfo.browserless.io/screenshot')
+    endpoint.searchParams.set('token', token)
+    const response = await fetch(endpoint, {method:'POST',signal:AbortSignal.timeout(18000),headers:{'Content-Type':'application/json'},body:JSON.stringify({url,options:{type:'jpeg',quality:68,fullPage:false,viewport}})})
+    if (!response.ok) return null
+    const bytes = Buffer.from(await response.arrayBuffer())
+    return bytes.length ? `data:image/jpeg;base64,${bytes.toString('base64')}` : null
+  } catch { return null }
+}
+
 
 export function scoreAudit(input: RestaurantInput, website: { reachable: boolean | null; https: boolean | null; title: boolean | null; meta: boolean | null; h1: boolean | null; canonical: boolean | null; schema: boolean | null; performance: number | null; seo: number | null; directPaths: string[]; pageSpeed?: PageSpeedReport | null }, reviews: { total: number | null; responseRate: number | null; negativeResponseRate: number | null; positiveShare: number | null; negativeShare: number | null }, social?: SocialScoreInput, reviewResponse?: SectionScoreInput, sentiment?: SectionScoreInput) {
   const psiPerf = website.pageSpeed?.mobile?.performance ?? website.pageSpeed?.desktop?.performance ?? null
