@@ -2,7 +2,7 @@ import * as cheerio from "cheerio"
 
 export type AuditSection = { key: string; label: string; earned: number | null; max: number; status: 'good' | 'warning' | 'bad' | 'unknown'; detail: string; evidence?: string[] }
 export type GmbOpeningHours = { daysOpen: number | null; weekdayDescriptions: string[] }
-export type RestaurantInput = { placeId: string; name: string; address: string; websiteUrl: string; googleWebsiteUrl?: string; lat?: number; lng?: number; rating?: number | null; reviewCount?: number | null; reviews?: any[]; openingHours?: GmbOpeningHours | null; socials: { instagram?: string; facebook?: string; tiktok?: string; youtube?: string; twitter?: string; threads?: string; linkedin?: string; pinterest?: string; snapchat?: string; whatsapp?: string } }
+export type RestaurantInput = { placeId: string; name: string; address: string; phone?: string; websiteUrl: string; googleWebsiteUrl?: string; lat?: number; lng?: number; rating?: number | null; reviewCount?: number | null; reviews?: any[]; openingHours?: GmbOpeningHours | null; socials: { instagram?: string; facebook?: string; tiktok?: string; youtube?: string; twitter?: string; threads?: string; linkedin?: string; pinterest?: string; snapchat?: string; whatsapp?: string } }
 export type SocialScoreInput = { earned: number | null; max: number; status: 'good' | 'warning' | 'bad' | 'unknown'; detail: string; evidence?: string[] } | null
 export type SectionScoreInput = { earned: number | null; max: number; status: 'good' | 'warning' | 'bad' | 'unknown'; detail: string; evidence?: string[] } | null
 export type WebsiteInspection = {
@@ -51,6 +51,12 @@ export type WebsiteInspection = {
   htmlSource?: 'direct' | 'browserless' | 'none'
   fetchError?: string | null
   finalUrl?: string | null
+  domainVerification?: {
+    status: 'branded' | 'third_party' | 'missing' | 'unverified'
+    expectedHost: string | null
+    inspectedHost: string | null
+    message: string
+  }
   metaTags: {
     title: string | null
     description: string | null
@@ -389,6 +395,7 @@ export async function fetchWebsiteHtml(url: string): Promise<WebsiteHtmlFetch> {
     }
   }
 }
+
 
 export function scoreAudit(input: RestaurantInput, website: { reachable: boolean | null; https: boolean | null; title: boolean | null; meta: boolean | null; h1: boolean | null; canonical: boolean | null; schema: boolean | null; performance: number | null; seo: number | null; directPaths: string[]; pageSpeed?: PageSpeedReport | null }, reviews: { total: number | null; responseRate: number | null; negativeResponseRate: number | null; positiveShare: number | null; negativeShare: number | null }, social?: SocialScoreInput, reviewResponse?: SectionScoreInput, sentiment?: SectionScoreInput) {
   const psiPerf = website.pageSpeed?.mobile?.performance ?? website.pageSpeed?.desktop?.performance ?? null

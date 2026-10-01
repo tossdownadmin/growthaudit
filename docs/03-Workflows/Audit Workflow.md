@@ -74,6 +74,12 @@ capture. Lead capture, persistence, and CRM enrichment begin only after the
 owner submits the free-report form; existing analytics event names and non-PII
 parameters remain unchanged.
 
+While the audit is running, the verification surface shows named checks plus a
+location-and-review evidence panel built from the selected Google place. The audit also
+records whether the inspected final domain matches the expected owned/branded
+domain. Marketplace, social, directory, and unresolved domains are surfaced
+explicitly rather than presented as owned websites.
+
 ### 1. Restaurant discovery
 
 The client requests coarse browser geolocation once and waits 350 ms after

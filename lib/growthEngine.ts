@@ -111,6 +111,22 @@ function ratingScore(rating: number | null | undefined) {
   return clamp(((Number(rating) - 3.5) / 1.3) * 100)
 }
 
+function thresholdScore(value: boolean | null | undefined) {
+  return value === null || value === undefined ? null : value ? 100 : 0
+}
+
+function briefRatingScore(rating: number | null | undefined) {
+  if (rating === null || rating === undefined || !Number.isFinite(Number(rating))) return null
+  const value = Number(rating)
+  return value >= 4.5 ? 100 : value >= 4 ? 73 : value >= 3.5 ? 40 : 17
+}
+
+function briefReviewVolumeScore(count: number | null | undefined) {
+  if (count === null || count === undefined || !Number.isFinite(Number(count))) return null
+  const value = Number(count)
+  return value >= 500 ? 100 : value >= 100 ? 75 : value >= 20 ? 40 : 15
+}
+
 function competitorRatingScore(target: number | null, median: number | null) {
   if (target === null || median === null) return null
   return clamp(70 + (target - median) * 150)
@@ -282,51 +298,41 @@ export function scoreGrowthEngine(args: {
     weight: 25,
     signals: [
       {
-        score: googleWebsite.score,
+        score: thresholdScore(website?.reachable),
         weight: 10,
-        evidence: googleWebsite.evidence,
+        evidence: website?.reachable === true ? 'Website is live and reachable.' : website?.reachable === false ? 'Website could not be reached.' : 'Website reachability was not measured.',
       },
       {
-        score: input.websiteUrl
-          ? website?.reachable === null || website?.reachable === undefined
-            ? null
-            : website.reachable
-              ? 100
-              : 0
-          : 0,
-        weight: 15,
-        evidence:
-          website?.reachable === true
-            ? 'Website is reachable.'
-            : website?.reachable === false
-              ? 'Website could not be reached.'
-              : 'Website reachability was not measured.',
-      },
-      {
-        score: typeof psiPerf === 'number' ? psiPerf : null,
-        weight: 15,
-        evidence:
-          typeof psiPerf === 'number'
-            ? `Mobile/customer-facing performance signal: ${Math.round(psiPerf)}/100.`
-            : 'Page speed was not measured.',
+        score: thresholdScore(website?.https),
+        weight: 10,
+        evidence: website?.https === true ? 'Website is served over HTTPS.' : website?.https === false ? 'Website is not served over HTTPS.' : 'HTTPS was not measured.',
       },
       {
         score: orderingOwnership,
-        weight: 45,
-        evidence:
-          ordering?.summary ||
-          (orderingOwnership === null ? 'Ordering path was not measured.' : 'No online ordering path was detected.'),
+        weight: 25,
+        evidence: ordering?.summary || 'Ordering path was not measured.',
       },
       {
-        score: conversionPathScore(website),
-        weight: 15,
-        evidence:
-          website?.htmlAvailable === false
-            ? 'Menu/contact conversion paths were not measured from HTML.'
-            : `Observed customer paths: ${Object.entries(website?.customerPaths ?? {})
-                .filter(([, value]) => Boolean(value))
-                .map(([key]) => key)
-                .join(', ') || 'none detected'}.`,
+        score: typeof psiPerf === 'number' ? clamp(psiPerf) : null,
+        weight: 25,
+        evidence: typeof psiPerf === 'number' ? `Mobile performance signal: ${Math.round(psiPerf)}/100.` : 'Mobile load performance was not measured.',
+      },
+      {
+        score: thresholdScore(website?.customerPaths?.menu),
+        weight: 10,
+        evidence: website?.customerPaths?.menu ? 'A public menu path was detected.' : 'A public menu path was not detected.',
+      },
+      {
+        score: input?.name && input?.address
+          ? thresholdScore(Boolean(input?.phone && input?.openingHours))
+          : null,
+        weight: 10,
+        evidence: 'Google profile identity and core contact details were checked.',
+      },
+      {
+        score: thresholdScore(website?.performanceSignals?.hasViewport),
+        weight: 10,
+        evidence: website?.performanceSignals?.hasViewport ? 'A mobile viewport is configured.' : 'A mobile viewport was not verified.',
       },
     ],
     summary: (score) => {
@@ -372,45 +378,28 @@ export function scoreGrowthEngine(args: {
     weight: 25,
     signals: [
       {
-        score: ratingScore(targetRating),
-        weight: 35,
+        score: briefRatingScore(targetRating),
+        weight: 30,
         evidence:
           targetRating == null ? 'Google rating unavailable.' : `Google rating: ${targetRating}/5.`,
       },
       {
-        score: recentPositive,
-        weight: 25,
+        score: briefReviewVolumeScore(targetReviewCount),
+        weight: 20,
         evidence:
           recentPositive !== null && metrics?.sampleSize
             ? `${Math.round((metrics.positiveRate ?? 0) * 100)}% positive across ${metrics.sampleSize} recent reviews analyzed.`
             : 'Overall Google rating is used until a sufficiently deep recent-review sample is verified.',
       },
       {
-        score: competitorRatingScore(
-          targetRating == null ? null : Number(targetRating),
-          benchmarkReady ? benchmark?.summary?.medianRating ?? null : null,
-        ),
-        weight: 15,
-        evidence:
-          benchmarkReady && benchmark?.summary?.medianRating != null
-            ? `Likely local alternatives have a median Google rating of ${benchmark.summary.medianRating}.`
-            : 'Local competitor rating benchmark was not available.',
+        score: normalizedProviderSection(reviewResponseSection),
+        weight: 30,
+        evidence: reviewResponseSection?.detail || 'Owner reply rate was not measured from a sufficiently deep review sample.',
       },
       {
-        score: competitorReviewVolumeScore(
-          targetReviewCount == null ? null : Number(targetReviewCount),
-          benchmarkReady ? benchmark?.summary?.medianReviewCount ?? null : null,
-        ),
-        weight: 10,
-        evidence:
-          benchmarkReady && benchmark?.summary?.medianReviewCount != null
-            ? `Likely local alternatives have a median of ${Math.round(benchmark.summary.medianReviewCount).toLocaleString()} Google reviews.`
-            : 'Local competitor review-volume benchmark was not available.',
-      },
-      {
-        score: searchReadinessScore(input, website),
-        weight: 15,
-        evidence: 'Website-on-Google and basic search-readiness signals were checked.',
+        score: recentPositive,
+        weight: 20,
+        evidence: recentPositive !== null && metrics?.sampleSize ? `${Math.round((metrics.positiveRate ?? 0) * 100)}% positive across ${metrics.sampleSize} recent reviews analyzed.` : 'Recent sentiment was not measured from a sufficiently deep review sample.',
       },
     ],
     summary: (score) => {

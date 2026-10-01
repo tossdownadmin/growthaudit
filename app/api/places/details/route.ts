@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Place details are unavailable.' }, { status: 503 })
   }
   try {
-    const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}`, { headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'id,displayName,formattedAddress,addressComponents,location,websiteUri,googleMapsUri,rating,userRatingCount,types,primaryType,priceLevel,reviews,regularOpeningHours' } })
+    const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}`, { headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'id,displayName,formattedAddress,addressComponents,location,nationalPhoneNumber,websiteUri,googleMapsUri,rating,userRatingCount,types,primaryType,priceLevel,reviews,regularOpeningHours' } })
     const data = await response.json().catch(() => ({}))
     if (!response.ok) {
       debugError('places.details', 'Google Places request failed', new Error(`HTTP ${response.status}`), { status: response.status, providerError: data?.error?.message, duration: elapsed(started) })
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     const postalCode = component(['postal_code'])
     const country = component(['country'], true)
     debugLog('places.details', 'Request completed', { placeId: id, hasWebsite: Boolean(data.websiteUri), daysOpen, duration: elapsed(started) })
-    return NextResponse.json({ placeId: data.id, name: data.displayName?.text ?? '', address: data.formattedAddress ?? '', address1, city, state, postalCode, country, lat: data.location?.latitude, lng: data.location?.longitude, websiteUrl: data.websiteUri ?? '', googleWebsiteUrl: data.websiteUri ?? '', googleMapsUri: data.googleMapsUri ?? '', rating: data.rating ?? null, reviewCount: data.userRatingCount ?? null, types: data.types ?? [], primaryType: data.primaryType ?? '', priceLevel: data.priceLevel ?? null, reviews: data.reviews ?? [], openingHours, socials: {} })
+    return NextResponse.json({ placeId: data.id, name: data.displayName?.text ?? '', address: data.formattedAddress ?? '', address1, city, state, postalCode, country, phone: data.nationalPhoneNumber ?? '', lat: data.location?.latitude, lng: data.location?.longitude, websiteUrl: data.websiteUri ?? '', googleWebsiteUrl: data.websiteUri ?? '', googleMapsUri: data.googleMapsUri ?? '', rating: data.rating ?? null, reviewCount: data.userRatingCount ?? null, types: data.types ?? [], primaryType: data.primaryType ?? '', priceLevel: data.priceLevel ?? null, reviews: data.reviews ?? [], openingHours, socials: {} })
   } catch (error) {
     debugError('places.details', 'Unexpected request failure', error, { duration: elapsed(started) })
     return NextResponse.json({ error: 'Could not load this location.' }, { status: 502 })
