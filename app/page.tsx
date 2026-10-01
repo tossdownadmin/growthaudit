@@ -23,13 +23,14 @@ function Header({landing=false}:{landing?:boolean}){return <header className={`$
 function Steps({active}:{active:0|1|2}){return <div className="mx-auto mb-6 grid max-w-2xl grid-cols-3 rounded-2xl border border-border bg-card p-2 shadow-sm">{['Find','Verify & audit','View report'].map((s,i)=><div key={s} className={`flex items-center justify-center gap-2 rounded-xl px-2 py-2 text-xs font-semibold ${i===active?'bg-foreground text-background':'text-muted-foreground'}`}><span className={`flex h-6 w-6 items-center justify-center rounded-full ${i<=active?'bg-primary text-white':'bg-muted text-muted-foreground'}`}>{i<active?<Check className="h-3.5 w-3.5"/>:i+1}</span><span className="hidden sm:inline">{s}</span></div>)}</div>}
 
 function LandingSearch({query,setQuery,suggestions,loading,error,choose,submit,active,onActivate,darkButton=false,note}:{query:string;setQuery:(value:string)=>void;suggestions:Place[];loading:boolean;error:string;choose:(place:Place)=>void;submit:()=>void;active:boolean;onActivate:()=>void;darkButton?:boolean;note:string}){
+ const canSearch=query.trim().length>=3
  return <div>
   <div className="relative">
    <div className="flex flex-nowrap items-center gap-2 rounded-2xl border border-[#ebe0ce] bg-white p-2 pl-3 shadow-[0_18px_34px_-18px_rgba(36,27,22,.25)] sm:pl-5">
     <Search className="h-5 w-5 shrink-0 text-[#7a6c5c]"/>
     <input value={query} onFocus={onActivate} onChange={e=>{onActivate();setQuery(e.target.value)}} onKeyDown={e=>{if(e.key==='Enter')submit()}} placeholder="Restaurant name and city..." aria-label="Restaurant name and city" className="min-w-0 flex-1 bg-transparent py-3 text-sm text-[#241b16] outline-none placeholder:text-[#a6957e] sm:text-base"/>
     {loading&&<Loader2 className="h-5 w-5 animate-spin text-[#e51451]"/>}
-    <button type="button" onClick={submit} className={`shrink-0 rounded-xl px-3 py-3 text-sm font-bold text-white transition-transform hover:-translate-y-0.5 sm:px-5 ${darkButton?'bg-[#241b16]':'bg-[#e51451]'}`}><span className="sm:hidden">Get score</span><span className="hidden sm:inline">Get my free score</span></button>
+    <button type="button" onClick={submit} disabled={!canSearch||loading} className={`shrink-0 rounded-xl px-3 py-3 text-sm font-bold text-white transition-colors sm:px-5 ${!canSearch||loading?'cursor-not-allowed bg-[#cfcac2] text-[#8f887f]':'hover:-translate-y-0.5 '+(darkButton?'bg-[#241b16]':'bg-[#e51451]')}`}><span className="sm:hidden">Get score</span><span className="hidden sm:inline">Get my free score</span></button>
    </div>
    {active&&suggestions.length>0&&<div className="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-[#ebe0ce] bg-white p-2 text-[#241b16] shadow-2xl">{suggestions.map(place=><button key={place.placeId} type="button" onClick={()=>choose(place)} className="w-full rounded-xl px-4 py-3 text-left hover:bg-[#fbf6ee]"><b className="block">{place.displayName}</b><span className="text-sm text-[#7a6c5c]">{place.formattedAddress}</span></button>)}</div>}
   </div>
