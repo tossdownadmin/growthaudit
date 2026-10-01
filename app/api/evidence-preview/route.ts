@@ -11,7 +11,7 @@ async function capture(url: string, token: string) {
   try {
     const endpoint = new URL('https://production-sfo.browserless.io/screenshot')
     endpoint.searchParams.set('token', token)
-    const response = await fetch(endpoint, {method:'POST',signal:AbortSignal.timeout(25000),headers:{'Content-Type':'application/json'},body:JSON.stringify({url,viewport:{width:390,height:844,isMobile:true,deviceScaleFactor:1},options:{type:'jpeg',quality:68,fullPage:false},gotoOptions:{waitUntil:'domcontentloaded',timeout:20000}})})
+    const response = await fetch(endpoint, {method:'POST',signal:AbortSignal.timeout(25000),headers:{'Content-Type':'application/json'},body:JSON.stringify({url,viewport:{width:390,height:844,isMobile:true,deviceScaleFactor:1},options:{type:'jpeg',quality:68,fullPage:false},gotoOptions:{waitUntil:'domcontentloaded',timeout:15000},waitForTimeout:4000})})
     if (!response.ok) {
       console.warn('[evidence-preview] Screenshot provider rejected capture', {status:response.status})
       return {image:null,status:`provider_${response.status}`}
