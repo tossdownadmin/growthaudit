@@ -151,6 +151,8 @@ The report renders immediately. It groups findings into owner decisions—growth
 
 ### Live preview reliability (2026-10-01)
 
+Preview recovery (2026-10-02): retry a temporary website-capture failure once after a short pause while the audit preview remains mounted. Missing configuration, invalid URLs, and provider authentication failures are not retried. Remove the visible illustrative-preview footer from map/social loading animations; retain accessible descriptions and keep animations out of scoring. A successful homepage capture does not establish that every location-page URL works.
+
 Preview preloading and shorter lead form (2026-10-02): begin website capture during restaurant verification after a short URL-edit debounce, and reuse the in-flight or successful capture for up to two minutes in this browser session. Keep the existing rendering wait for image quality; provider latency is not guaranteed. Failed captures can be retried at audit start. Phone country defaults to the selected restaurant's validated country code (US fallback), remains editable, and Role is no longer collected or submitted. Scoring and lead delivery remain unchanged.
 
 Capture framing (2026-10-02): website and social screenshots fill the preview width at their natural aspect ratio inside a fixed-height, vertically scrollable viewport. This avoids grey side gutters without stretching or hiding the rest of the capture. Remove the horizontal scanner overlay from real screenshots. Capture requests, timing, and scoring remain unchanged.

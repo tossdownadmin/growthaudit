@@ -18,7 +18,13 @@ export function LiveEvidence({stage,restaurant,websiteUrl,socials,lat,lng}:{stag
       if (kind !== 'map' && !url) {setCaptures(c=>({...c,[kind]:{image:null,status:'missing_url'}}));return}
       try {
         if (kind === 'website' && url) {
-          const result = await preloadWebsitePreview(url)
+          let result = await preloadWebsitePreview(url)
+          const retryable = ['capture_failed','request_failed','unavailable','empty_image','provider_408','provider_429','provider_500','provider_502','provider_503','provider_504'].includes(result.status)
+          if (!result.image && retryable && !controller.signal.aborted) {
+            await new Promise(resolve=>setTimeout(resolve,1500))
+            if (controller.signal.aborted) return
+            result = await preloadWebsitePreview(url)
+          }
           if (!controller.signal.aborted) setCaptures(c=>({...c,website:result}))
           return
         }
@@ -48,6 +54,6 @@ export function LiveEvidence({stage,restaurant,websiteUrl,socials,lat,lng}:{stag
       <p className="text-sm text-muted-foreground">{capture.status==='pending'?'Loading this preview…':capture.status==='missing_url'?'No public profile was provided.':'Preview unavailable. Your audit will continue using the available public information.'}</p>
       {safeSource&&<a href={safeSource} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">Visit website<ExternalLink className="h-4 w-4"/></a>}
     </div>}
-    <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">{capture.image?'Public page capture':kind==='map'||kind==='social'?'Illustrative preview':'Website, location and social previews are optional evidence.'}</div>
+    {capture.image&&<div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">Public page capture</div>}
   </section>
 }
