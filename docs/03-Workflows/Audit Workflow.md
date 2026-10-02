@@ -151,6 +151,8 @@ The report renders immediately. It groups findings into owner decisions—growth
 
 ### Live preview reliability (2026-10-01)
 
+Capture framing (2026-10-02): website and social screenshots fill the preview width at their natural aspect ratio inside a fixed-height, vertically scrollable viewport. This avoids grey side gutters without stretching or hiding the rest of the capture. Remove the horizontal scanner overlay from real screenshots. Capture requests, timing, and scoring remain unchanged.
+
 Checklist copy (2026-10-02): each row states its actual pass, attention, fail, or unknown finding. Failed checks must not retain positive labels beside a cross. Review findings describe the measured sample; zero negative reviews and insufficient evidence are distinguished from unanswered complaints. This changes presentation only, preserving thresholds, scores, and checklist inclusion.
 
 As of 2026-10-02, map and social loading/unavailable states display animated illustrative mockups, as requested. Real captures still take precedence. Mockups carry an illustrative-preview caption and contain no invented review counts, engagement metrics, or geographic claims. Website capture and all scoring behavior remain unchanged. Motion respects reduced-motion preferences.

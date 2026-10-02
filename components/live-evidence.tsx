@@ -34,9 +34,8 @@ export function LiveEvidence({stage,restaurant,websiteUrl,socials,lat,lng}:{stag
   const safeSource = /^https?:\/\//i.test(source) ? source : ''
   return <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm" aria-label={title}>
     <div className="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</div>
-    {capture.image ? <div className="relative overflow-hidden bg-muted">
-      <img src={capture.image} alt={`${title}: ${restaurant}`} className={kind==='map'?'h-80 w-full object-cover':'mx-auto h-80 w-auto max-w-full object-contain object-top'} onError={()=>setCaptures(c=>({...c,[kind]:{image:null,status:'image_failed'}}))}/>
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-primary/40 motion-safe:animate-pulse"/>
+    {capture.image ? <div className="h-80 overflow-x-hidden overflow-y-auto bg-white" tabIndex={0} role="region" aria-label={`${title} capture`}>
+      <img src={capture.image} alt={`${title}: ${restaurant}`} className={kind==='map'?'block h-80 w-full object-cover':'block h-auto w-full'} onError={()=>setCaptures(c=>({...c,[kind]:{image:null,status:'image_failed'}}))}/>
     </div> : kind==='map' ? <MapMockup restaurant={restaurant}/> : kind==='social' ? <SocialMockup restaurant={restaurant}/> : <div className="flex min-h-80 flex-col items-center justify-center gap-4 bg-[#fbf6ee] px-6 text-center" role="status">
       {capture.status==='pending'?<Loader2 className="h-8 w-8 animate-spin text-primary"/>:<Globe className="h-8 w-8 text-primary"/>}
       <p className="font-semibold">{restaurant}</p>
