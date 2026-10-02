@@ -41,7 +41,7 @@ export function LiveEvidence({stage,restaurant,websiteUrl,socials,lat,lng}:{stag
   },[websiteUrl,socialUrl,lat,lng])
   const kind = stage===1 ? 'map' : stage===3 ? 'social' : 'website'
   const capture = captures[kind]
-  const title = kind==='map' ? 'Around your restaurant' : kind==='social' ? 'Your social presence' : 'Your mobile website'
+  const title = kind==='map' ? 'Around your restaurant' : kind==='social' ? 'Your social presence' : 'Your website'
   const source = kind==='website' ? websiteUrl : kind==='social' ? socialUrl : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(Number.isFinite(lat)&&Number.isFinite(lng)?`${lat},${lng}`:restaurant)}`
   const safeSource = /^https?:\/\//i.test(source) ? source : ''
   return <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm" aria-label={title}>
