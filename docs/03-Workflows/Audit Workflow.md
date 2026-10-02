@@ -151,6 +151,8 @@ The report renders immediately. It groups findings into owner decisions—growth
 
 ### Live preview reliability (2026-10-01)
 
+Checklist copy (2026-10-02): each row states its actual pass, attention, fail, or unknown finding. Failed checks must not retain positive labels beside a cross. Review findings describe the measured sample; zero negative reviews and insufficient evidence are distinguished from unanswered complaints. This changes presentation only, preserving thresholds, scores, and checklist inclusion.
+
 As of 2026-10-02, map and social loading/unavailable states display animated illustrative mockups, as requested. Real captures still take precedence. Mockups carry an illustrative-preview caption and contain no invented review counts, engagement metrics, or geographic claims. Website capture and all scoring behavior remain unchanged. Motion respects reduced-motion preferences.
 
 Production verification: Sholay mobile website capture was visually confirmed. Google Maps returned HTTP 403 with an invalid-key message; account configuration remains required. Instagram returned a login wall, so social captures wait for public images without password/login UI and fall back to the confirmed profile link if unavailable. Stages last 15 seconds while the audit runs; completed reports are not artificially delayed to finish the visual sequence.

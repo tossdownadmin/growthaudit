@@ -121,7 +121,7 @@ function buildChecklist(audit:any):Array<{title:string;items:ChecklistItem[]}>{
             ? 'fail'
             : 'unknown'
 
-  return [
+  const groups:Array<{title:string;items:ChecklistItem[]}>= [
     {title:'Website & online ordering',items:[
       {label:'Your website opens for customers',state:website.reachable===true?'pass':website.reachable===false?'fail':'unknown',tip:'Make sure the domain resolves and returns a working page.'},
       {label:'Your website is secure (HTTPS)',state:boolState(website.https),tip:'Serve the whole site over HTTPS so customer data is protected.'},
@@ -149,6 +149,24 @@ function buildChecklist(audit:any):Array<{title:string;items:ChecklistItem[]}>{
       {label:'Social bios route customers to your website',state:bioLinkState,tip:'Point active social audiences toward your owned website or direct ordering path.'},
     ]},
   ]
+  const copy:Record<string,Record<ChecklistState,string>>={
+    'Your website opens for customers':{pass:'Your website opens successfully',fail:'Your website did not open during our check',attention:'Your website needs attention',unknown:'We could not check whether your website opens'},
+    'Your website is secure (HTTPS)':{pass:'Your website uses a secure HTTPS connection',fail:'Your website does not use a secure HTTPS connection',attention:'Your website connection needs attention',unknown:'We could not check your website’s connection security'},
+    'Your site loads quickly on phones':{pass:'Your website loads quickly on phones',fail:'Your website loads slowly on phones',attention:'Your website could load faster on phones',unknown:'We could not measure your website’s mobile speed'},
+    'Customers can order through your brand':{pass:'Customers have a direct ordering option with your brand',fail:website.ordering?.status==='marketplace'?'Your ordering links send customers to a delivery marketplace':'We did not find an online ordering option',attention:website.ordering?.status==='location_required'?'Customers must choose a location before we can check ordering':website.ordering?.status==='mixed'?'Your website offers both direct and marketplace ordering':'We could not confirm a clear direct ordering option',unknown:'We could not check your online ordering options'},
+    'Page title set':{pass:'Your website has a title for search results',fail:'Your website is missing a title for search results',attention:'Your search-result title needs attention',unknown:'We could not check your search-result title'},
+    'Meta description set':{pass:'Your website has a description for search results',fail:'Your website is missing a description for search results',attention:'Your search-result description needs attention',unknown:'We could not check your search-result description'},
+    'Structured data (schema)':{pass:'Your website includes structured information for search engines',fail:'We did not find structured information for search engines',attention:'Your search-engine information needs attention',unknown:'We could not check your website’s structured information'},
+    'Link preview image (Open Graph)':{pass:'Your website has an image for shared-link previews',fail:'Your website is missing an image for shared-link previews',attention:'Your shared-link preview image needs attention',unknown:'We could not check your shared-link preview image'},
+    'Google sends customers to your branded website':{pass:'Your Google profile links to your website',fail:gmbUrl?'Your Google profile links to a third-party page':'Your Google profile is missing your website link',attention:'Your Google website link needs attention',unknown:'We could not check the website link on your Google profile'},
+    'Social bios route customers to your website':{pass:'At least one social profile links to your website',fail:'We did not find your website link in the social profiles checked',attention:'Your social profile links need attention',unknown:'We could not check your social profile website links'},
+    'Opening hours match Google & website':{pass:'Google and your website show the same number of open days',fail:'Google and your website show different numbers of open days',attention:'Your listed opening days need attention',unknown:'We could not compare your opening days across Google and your website'},
+    'Customers can see your Google reputation':{pass:'Your Google rating is visible to customers',fail:'We did not find a visible Google rating',attention:'Your Google review presence needs attention',unknown:'We could not confirm your Google rating'},
+    'Your team replies to recent reviews':{pass:'Your team replied to at least half of the reviews checked',fail:'We found no owner replies in the reviews checked',attention:'More than half of the reviews checked have no owner reply',unknown:'There is not enough evidence to assess your review replies'},
+    'Unhappy customers receive a response':{pass:m?.negativeReviews===0?'No negative reviews appeared in the sample checked':'Your team replied to most negative reviews checked',fail:'The negative reviews checked have no owner replies',attention:m?.negativeReviews<3||m?.negativeResponseRate==null?'There is not enough evidence to assess replies to negative reviews':'Some negative reviews checked still need a reply',unknown:'We could not assess replies to negative reviews'},
+    'At least one actively maintained public social channel':{pass:'At least one of your social profiles is active',fail:'The social profiles checked show no recent activity',attention:'We could not confirm consistent activity on your social profiles',unknown:'We could not assess your social posting activity'},
+  }
+  return groups.map(group=>({...group,items:group.items.map(item=>({...item,label:copy[item.label]?.[item.state]??item.label}))}))
 }
 function ChecklistRow({item}:{item:ChecklistItem}){
   const icon=
