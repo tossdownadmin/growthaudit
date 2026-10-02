@@ -3,6 +3,7 @@
 import {useEffect, useState} from 'react'
 import {Loader2, Globe, ExternalLink} from 'lucide-react'
 import {MapMockup, SocialMockup} from './evidence-mockups'
+import {preloadWebsitePreview} from '@/lib/website-preview'
 
 type Capture = {image:string|null; status:string}
 const pending:Capture = {image:null,status:'pending'}
@@ -16,6 +17,11 @@ export function LiveEvidence({stage,restaurant,websiteUrl,socials,lat,lng}:{stag
     async function request(kind:string,url?:string) {
       if (kind !== 'map' && !url) {setCaptures(c=>({...c,[kind]:{image:null,status:'missing_url'}}));return}
       try {
+        if (kind === 'website' && url) {
+          const result = await preloadWebsitePreview(url)
+          if (!controller.signal.aborted) setCaptures(c=>({...c,website:result}))
+          return
+        }
         const response = await fetch('/api/evidence-preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,url,lat,lng}),signal:AbortSignal.any([controller.signal,AbortSignal.timeout(30000)])})
         const result:Capture = response.ok ? await response.json() : {image:null,status:'request_failed'}
         if (!controller.signal.aborted) setCaptures(c=>({...c,[kind]:{image:result.image||null,status:result.status||'unavailable'}}))

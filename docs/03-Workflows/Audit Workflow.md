@@ -151,6 +151,8 @@ The report renders immediately. It groups findings into owner decisions—growth
 
 ### Live preview reliability (2026-10-01)
 
+Preview preloading and shorter lead form (2026-10-02): begin website capture during restaurant verification after a short URL-edit debounce, and reuse the in-flight or successful capture for up to two minutes in this browser session. Keep the existing rendering wait for image quality; provider latency is not guaranteed. Failed captures can be retried at audit start. Phone country defaults to the selected restaurant's validated country code (US fallback), remains editable, and Role is no longer collected or submitted. Scoring and lead delivery remain unchanged.
+
 Capture framing (2026-10-02): website and social screenshots fill the preview width at their natural aspect ratio inside a fixed-height, vertically scrollable viewport. This avoids grey side gutters without stretching or hiding the rest of the capture. Remove the horizontal scanner overlay from real screenshots. Capture requests, timing, and scoring remain unchanged.
 
 Checklist copy (2026-10-02): each row states its actual pass, attention, fail, or unknown finding. Failed checks must not retain positive labels beside a cross. Review findings describe the measured sample; zero negative reviews and insufficient evidence are distinguished from unanswered complaints. This changes presentation only, preserving thresholds, scores, and checklist inclusion.
