@@ -1,7 +1,8 @@
 'use client'
 
 import {useEffect, useState} from 'react'
-import {Loader2, Globe, MapPin, ExternalLink} from 'lucide-react'
+import {Loader2, Globe, ExternalLink} from 'lucide-react'
+import {MapMockup, SocialMockup} from './evidence-mockups'
 
 type Capture = {image:string|null; status:string}
 const pending:Capture = {image:null,status:'pending'}
@@ -36,12 +37,12 @@ export function LiveEvidence({stage,restaurant,websiteUrl,socials,lat,lng}:{stag
     {capture.image ? <div className="relative overflow-hidden bg-muted">
       <img src={capture.image} alt={`${title}: ${restaurant}`} className={kind==='map'?'h-80 w-full object-cover':'mx-auto h-80 w-auto max-w-full object-contain object-top'} onError={()=>setCaptures(c=>({...c,[kind]:{image:null,status:'image_failed'}}))}/>
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-primary/40 motion-safe:animate-pulse"/>
-    </div> : <div className="flex min-h-80 flex-col items-center justify-center gap-4 bg-[#fbf6ee] px-6 text-center" role="status">
-      {capture.status==='pending'?<Loader2 className="h-8 w-8 animate-spin text-primary"/>:kind==='map'?<MapPin className="h-8 w-8 text-primary"/>:<Globe className="h-8 w-8 text-primary"/>}
+    </div> : kind==='map' ? <MapMockup restaurant={restaurant}/> : kind==='social' ? <SocialMockup restaurant={restaurant}/> : <div className="flex min-h-80 flex-col items-center justify-center gap-4 bg-[#fbf6ee] px-6 text-center" role="status">
+      {capture.status==='pending'?<Loader2 className="h-8 w-8 animate-spin text-primary"/>:<Globe className="h-8 w-8 text-primary"/>}
       <p className="font-semibold">{restaurant}</p>
       <p className="text-sm text-muted-foreground">{capture.status==='pending'?'Loading this preview…':capture.status==='missing_url'?'No public profile was provided.':'Preview unavailable. Your audit will continue using the available public information.'}</p>
-      {safeSource&&<a href={safeSource} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">{kind==='map'?'View location':kind==='social'?'View public profile':'Visit website'}<ExternalLink className="h-4 w-4"/></a>}
+      {safeSource&&<a href={safeSource} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">Visit website<ExternalLink className="h-4 w-4"/></a>}
     </div>}
-    <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">{capture.image?'Public page capture':'Website, location and social previews are optional evidence.'}</div>
+    <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">{capture.image?'Public page capture':kind==='map'||kind==='social'?'Illustrative preview':'Website, location and social previews are optional evidence.'}</div>
   </section>
 }
