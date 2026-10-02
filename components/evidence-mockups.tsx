@@ -1,6 +1,26 @@
 import {MapPin, Utensils, Heart, MessageCircle, Bookmark, Camera, Coffee} from 'lucide-react'
 import styles from './evidence-mockups.module.css'
 
+export function WebsiteLoading({url}:{url:string}) {
+  return <div className={`${styles.scene} ${styles.websiteLoading}`} role="status" aria-label="Loading website preview">
+    <div className={styles.phoneBrowser} aria-hidden="true">
+      <div className={styles.phoneTop}><span/></div>
+      <div className={styles.browserToolbar}><span className={styles.browserUrl} title={url}>{url||'Loading website…'}</span><span>⋮</span></div>
+      <div className={styles.browserScreen}>
+        <div className={styles.blurredPage}>
+          <div className={styles.skeletonNav}/><div className={styles.skeletonHero}/>
+          <div className={styles.skeletonHeading}/><div className={styles.skeletonCopy}/>
+          <div className={styles.skeletonTiles}><span/><span/></div>
+          <div className={styles.skeletonCopy}/>
+        </div>
+        <div className={styles.websiteScan}/>
+      </div>
+      <div className={styles.phoneBottom}><span/></div>
+    </div>
+    <span className="sr-only">Capturing {url}</span>
+  </div>
+}
+
 export function MapMockup({restaurant}:{restaurant:string}) {
   return <div className={styles.scene} role="img" aria-label={`Illustrative local map for ${restaurant}`}>
     <div className={styles.map} aria-hidden="true">

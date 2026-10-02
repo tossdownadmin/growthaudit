@@ -151,6 +151,8 @@ The report renders immediately. It groups findings into owner decisions—growth
 
 ### Live preview reliability (2026-10-01)
 
+Website loading presentation (2026-10-02): while capture is pending (including the bounded retry), show a phone-browser frame with the requested URL, a blurred page skeleton, and a gentle scan sweep. Replace it with the actual image on success; retain the existing failure state after capture fails. The scanner appears only on the loading placeholder, respects reduced motion, and does not delay results. No other reference-screen styling is adopted.
+
 Preview recovery (2026-10-02): retry a temporary website-capture failure once after a short pause while the audit preview remains mounted. Missing configuration, invalid URLs, and provider authentication failures are not retried. Remove the visible illustrative-preview footer from map/social loading animations; retain accessible descriptions and keep animations out of scoring. A successful homepage capture does not establish that every location-page URL works.
 
 Preview preloading and shorter lead form (2026-10-02): begin website capture during restaurant verification after a short URL-edit debounce, and reuse the in-flight or successful capture for up to two minutes in this browser session. Keep the existing rendering wait for image quality; provider latency is not guaranteed. Failed captures can be retried at audit start. Phone country defaults to the selected restaurant's validated country code (US fallback), remains editable, and Role is no longer collected or submitted. Scoring and lead delivery remain unchanged.

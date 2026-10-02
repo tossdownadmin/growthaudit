@@ -1,8 +1,8 @@
 'use client'
 
 import {useEffect, useState} from 'react'
-import {Loader2, Globe, ExternalLink} from 'lucide-react'
-import {MapMockup, SocialMockup} from './evidence-mockups'
+import {Globe, ExternalLink} from 'lucide-react'
+import {MapMockup, SocialMockup, WebsiteLoading} from './evidence-mockups'
 import {preloadWebsitePreview} from '@/lib/website-preview'
 
 type Capture = {image:string|null; status:string}
@@ -48,10 +48,10 @@ export function LiveEvidence({stage,restaurant,websiteUrl,socials,lat,lng}:{stag
     <div className="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</div>
     {capture.image ? <div className="h-80 overflow-x-hidden overflow-y-auto bg-white" tabIndex={0} role="region" aria-label={`${title} capture`}>
       <img src={capture.image} alt={`${title}: ${restaurant}`} className={kind==='map'?'block h-80 w-full object-cover':'block h-auto w-full'} onError={()=>setCaptures(c=>({...c,[kind]:{image:null,status:'image_failed'}}))}/>
-    </div> : kind==='map' ? <MapMockup restaurant={restaurant}/> : kind==='social' ? <SocialMockup restaurant={restaurant}/> : <div className="flex min-h-80 flex-col items-center justify-center gap-4 bg-[#fbf6ee] px-6 text-center" role="status">
-      {capture.status==='pending'?<Loader2 className="h-8 w-8 animate-spin text-primary"/>:<Globe className="h-8 w-8 text-primary"/>}
+    </div> : kind==='map' ? <MapMockup restaurant={restaurant}/> : kind==='social' ? <SocialMockup restaurant={restaurant}/> : capture.status==='pending' ? <WebsiteLoading url={websiteUrl}/> : <div className="flex min-h-80 flex-col items-center justify-center gap-4 bg-[#fbf6ee] px-6 text-center" role="status">
+      <Globe className="h-8 w-8 text-primary"/>
       <p className="font-semibold">{restaurant}</p>
-      <p className="text-sm text-muted-foreground">{capture.status==='pending'?'Loading this preview…':capture.status==='missing_url'?'No public profile was provided.':'Preview unavailable. Your audit will continue using the available public information.'}</p>
+      <p className="text-sm text-muted-foreground">{capture.status==='missing_url'?'No public profile was provided.':'Preview unavailable. Your audit will continue using the available public information.'}</p>
       {safeSource&&<a href={safeSource} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">Visit website<ExternalLink className="h-4 w-4"/></a>}
     </div>}
     {capture.image&&<div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">Public page capture</div>}
